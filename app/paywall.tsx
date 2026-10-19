@@ -2,12 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Button, ErrorText, Screen } from '@/components/ui';
 import { PLANS } from '@/constants/catalog';
 import { isSupabaseConfigured } from '@/lib/env';
-import { loadOfferings, presentStorePaywall, purchaseProduct, restorePremium } from '@/lib/revenuecat';
+import { loadOfferings, purchaseProduct, restorePremium } from '@/lib/revenuecat';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function PaywallScreen() {
@@ -39,42 +39,47 @@ export default function PaywallScreen() {
 
   return (
     <Screen>
-      <View className="mt-2 flex-row justify-end">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Kapat"
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
-          className="h-11 w-11 items-center justify-center rounded-2xl bg-ink"
-        >
-          <X color="#F4F7F8" size={20} strokeWidth={2.5} />
-        </Pressable>
-      </View>
       <Animated.View entering={FadeInDown.duration(420)}>
-        <Text className="mt-4 text-center text-3xl font-bold leading-9 text-ink dark:text-white">Profiline uygun ilanları kaçırma</Text>
-        <View className="my-4 gap-2">
-          {[
-            'Profilinle eşleşen memur, sözleşmeli ve işçi ilanları',
-            'Yeni ilan yayınlandığında anlık bildirim',
-            'Son 48 saat başvuru bitiş hatırlatıcıları',
-            'Detaylı rakip analizi ve taban puan istatistikleri',
-          ].map((item) => (
-            <Text key={item} className="text-sm text-ink dark:text-slate-200">✓ {item}</Text>
-          ))}
+        <View className="mt-2 overflow-hidden rounded-[28px] bg-brand-700 px-5 pb-6 pt-4">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Kapat"
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
+            className="h-9 w-9 items-center justify-center self-end rounded-full border border-white/40"
+          >
+            <X color="#F4F7F8" size={16} strokeWidth={2.25} />
+          </Pressable>
+          <Text className="mt-1 text-center text-3xl font-bold leading-9 text-white">Profiline uygun ilanları kaçırma</Text>
+          <View className="mt-4 gap-2.5">
+            {[
+              'Profilinle eşleşen memur, sözleşmeli ve işçi ilanları',
+              'Yeni ilan yayınlandığında anlık bildirim',
+              'Son 48 saat başvuru bitiş hatırlatıcıları',
+              'Detaylı rakip analizi ve taban puan istatistikleri',
+            ].map((item) => (
+              <View key={item} className="flex-row items-start gap-2">
+                <Text className="mt-0.5 text-sm text-white">•</Text>
+                <Text className="flex-1 text-sm leading-5 text-white/95">{item}</Text>
+              </View>
+            ))}
+          </View>
         </View>
+        <View className="mt-4">
         {PLANS.map((plan) => {
           const storePrice = offerings.data?.find((item) => item.product.identifier === plan.productId)?.product.priceString;
           const active = selected === plan.id;
           return (
-            <Pressable key={plan.id} onPress={() => setSelected(plan.id)} className={`mb-3 rounded-3xl border p-4 ${active ? 'border-brand-700 bg-brand-50 dark:bg-slate-800' : 'border-line bg-white dark:border-slate-800 dark:bg-slate-900'}`}>
+            <Pressable key={plan.id} onPress={() => setSelected(plan.id)} className={`mb-2 rounded-2xl border px-3.5 py-3 ${active ? 'border-brand-700 bg-brand-50 dark:bg-slate-800' : 'border-line bg-white dark:border-slate-800 dark:bg-slate-900'}`}>
               <View className="flex-row items-center justify-between">
-                <Text className="text-lg font-bold text-ink dark:text-white">{plan.title}</Text>
-                {plan.badge ? <Text className="rounded-full bg-brand-700 px-2 py-1 text-xs font-semibold text-white">{plan.badge}</Text> : null}
+                <Text className="text-base font-bold text-ink dark:text-white">{plan.title}</Text>
+                {plan.badge ? <Text className="rounded-full bg-brand-700 px-2 py-1 text-[11px] font-semibold text-white">{plan.badge}</Text> : null}
               </View>
-              <Text className="mt-1 text-base font-semibold text-brand-700">{storePrice ?? plan.price}</Text>
-              <Text className="text-sm text-muted">{plan.monthly} · {plan.note}</Text>
+              <Text className="mt-0.5 text-sm font-semibold text-brand-700">{storePrice ?? plan.price}</Text>
+              <Text className="text-xs text-muted">{plan.monthly} · {plan.note}</Text>
             </Pressable>
           );
         })}
+        </View>
         <ErrorText text={error} />
         <Button label={pending ? 'İşleniyor' : 'Devam et'} onPress={buy} disabled={pending} />
         {mode === 'demo' || !isSupabaseConfigured ? (
@@ -89,13 +94,8 @@ export default function PaywallScreen() {
             />
           </View>
         ) : null}
-        {Platform.OS !== 'web' ? (
-          <Pressable accessibilityRole="button" onPress={() => presentStorePaywall()} className="mt-4">
-            <Text className="text-center text-sm text-muted">Mağaza ekranından satın al</Text>
-          </Pressable>
-        ) : null}
         <Text className="mt-4 px-2 text-center text-xs leading-5 text-muted">
-          Abonelik, satın aldığın mağaza hesabından yenilenir. Dönem bitmeden en az 24 saat önce iptal edilmezse yenilenir. Ekrandaki fiyat örnektir. Ödeme anında mağaza fiyatı geçerlidir.
+          Ödeme Apple veya Google hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse aynı fiyatla yenilenir.
         </Text>
         <View className="mt-5 flex-row flex-wrap items-center justify-center">
           <Pressable accessibilityRole="link" onPress={() => router.push('/legal/terms')}>

@@ -14,7 +14,7 @@
     "android": {
       "package": "com.mertglbyz.kpssatama",
       "adaptiveIcon": {
-        "backgroundColor": "#1A4A57",
+        "backgroundColor": "#143F4C",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -34,7 +34,7 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#1A4A57"
+          "backgroundColor": "#143F4C"
         }
       ],
       "expo-secure-store",

@@ -1,16 +1,18 @@
 import { Tabs } from 'expo-router';
 import { Bell, Briefcase, House, Settings, UserRound } from 'lucide-react-native';
+import { useAppStore } from '@/store/useAppStore';
 
 export default function TabLayout() {
+  const dark = useAppStore((state) => state.colorScheme) === 'dark';
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1A4A57',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarActiveTintColor: dark ? '#D3E4E6' : '#1A4A57',
+        tabBarInactiveTintColor: dark ? '#6E8088' : '#9CA3AF',
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E6E2EE',
+          backgroundColor: dark ? '#102027' : '#F4F7F8',
+          borderTopColor: dark ? '#1E333C' : '#E1E7EA',
           height: 68,
           paddingTop: 8,
           paddingBottom: 10,

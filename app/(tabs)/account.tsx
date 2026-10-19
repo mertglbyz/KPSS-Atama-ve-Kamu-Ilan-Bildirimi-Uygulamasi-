@@ -46,7 +46,7 @@ export default function AccountScreen() {
 
   return (
     <Screen>
-      <Title subtitle="Abonelik, bildirim ve görünüm. Hesap açmana gerek yok.">Ayarlar</Title>
+      <Title subtitle="Abonelik, bildirim ve görünüm.">Ayarlar</Title>
       <Card className="mb-5">
         <Text className="text-xs font-semibold tracking-[2px] text-brand-700">PLAN</Text>
         <Text className="mt-1 text-2xl font-bold text-ink dark:text-white">{PLAN_LABEL[plan]}</Text>
@@ -74,7 +74,7 @@ export default function AccountScreen() {
             }
             if (!userId) return;
             const token = await registerPushToken(userId);
-            setMessage(token ? 'Bildirim anahtarı kaydedildi.' : 'Bu platformda bildirim izni alınamadı.');
+            setMessage(token ? 'Bildirimler açıldı.' : 'Bildirim izni verilmedi.');
           }}
         />
         <Button label="Aboneliği yönet" variant="secondary" onPress={() => router.push('/paywall')} />

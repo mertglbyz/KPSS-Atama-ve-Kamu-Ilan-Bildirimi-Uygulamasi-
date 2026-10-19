@@ -115,7 +115,7 @@ export function Choice({
       {options.map((option) => {
         const active = option === value;
         return (
-          <Pressable key={option} accessibilityRole="button" onPress={() => onChange(option)} className={`rounded-full px-4 py-2.5 ${active ? 'bg-brand-700' : 'border border-line bg-white dark:bg-slate-800'}`}>
+          <Pressable key={option} accessibilityRole="button" onPress={() => onChange(option)} className={`rounded-full px-4 py-2.5 ${active ? 'bg-brand-700' : 'border border-line bg-white dark:border-slate-600 dark:bg-slate-800'}`}>
             <Text className={`text-sm font-semibold ${active ? 'text-white' : 'text-ink dark:text-slate-100'}`}>{option}</Text>
           </Pressable>
         );

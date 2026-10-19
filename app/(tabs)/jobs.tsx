@@ -99,7 +99,7 @@ export default function JobsScreen() {
           <Text className="text-lg font-semibold text-ink dark:text-white">Kişiye özel kadrolar kilitli</Text>
           <Text className="mt-2 text-sm leading-5 text-muted">Eşleşme sayısı ana sayfada görünür. Unvan, şart ve başvuru ayrıntısı Pro abonelikle açılır.</Text>
           <View className="mt-4">
-            <Button label="Pro'yu aç" onPress={() => router.push('/paywall')} />
+            <Button label="Pro'ya geç" onPress={() => router.push('/paywall')} />
           </View>
         </Card>
       ) : rows.length === 0 ? (
@@ -122,7 +122,7 @@ export default function JobsScreen() {
                   <Text className="text-xs font-semibold text-brand-700">{row.institution}</Text>
                   <Text className="mt-1 text-lg font-bold text-ink dark:text-white">{row.title}</Text>
                 </View>
-                {matchIds.has(row.id) ? <Text className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">Uygun</Text> : null}
+                {matchIds.has(row.id) ? <Text className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">Uygun</Text> : null}
               </View>
               <JobNotice start={row.start} end={row.end} />
               <JobChips end={row.end} education={row.education} quota={row.quota} requiresKpss={row.requiresKpss} kpssType={row.kpssType} minKpssScore={row.minKpssScore} />

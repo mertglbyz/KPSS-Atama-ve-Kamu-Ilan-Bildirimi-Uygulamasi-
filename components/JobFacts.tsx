@@ -5,11 +5,15 @@ import { formatDay } from '@/lib/format';
 export function JobNotice({ start, end }: { start: string | null; end: string }) {
   const notice = applicationNotice(start, end);
   if (!notice) return null;
-  const tone = notice.tone === 'soon' ? 'border-red-200 bg-red-50' : notice.tone === 'closed' ? 'border-line bg-slate-100' : 'border-amber-200 bg-amber-50';
+  const tone = notice.tone === 'soon'
+    ? 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950'
+    : notice.tone === 'closed'
+      ? 'border-line bg-slate-100 dark:border-slate-700 dark:bg-slate-800'
+      : 'border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950';
   return (
     <View className={`mt-3 rounded-2xl border px-3 py-3 ${tone}`}>
-      <Text className="text-xs font-bold tracking-wide text-ink">{notice.title}</Text>
-      <Text className="mt-1 text-sm leading-5 text-ink">{notice.detail}</Text>
+      <Text className="text-xs font-bold tracking-wide text-ink dark:text-slate-100">{notice.title}</Text>
+      <Text className="mt-1 text-sm leading-5 text-ink dark:text-slate-200">{notice.detail}</Text>
     </View>
   );
 }
@@ -34,7 +38,7 @@ export function JobChips({
   return (
     <View className="mt-3 flex-row flex-wrap gap-2">
       {chips.map((chip) => (
-        <View key={chip} className="rounded-full bg-canvas px-3 py-1.5 dark:bg-slate-800">
+        <View key={chip} className="rounded-full bg-canvas px-3 py-1.5 dark:bg-slate-700">
           <Text className="text-xs font-medium text-ink dark:text-slate-100">{chip}</Text>
         </View>
       ))}
