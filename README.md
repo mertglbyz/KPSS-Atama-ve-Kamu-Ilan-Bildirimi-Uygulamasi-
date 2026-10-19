@@ -2,7 +2,7 @@
 
 Türkiye’deki kamu personel ilanlarını toplayan, adayın profiliyle eşleştiren ve Pro abonelere anlık bildirim gönderen mobil uygulama. Giriş ekranı yoktur. Profil bu cihazda tutulur.
 
-Tasarım, kalabalık araç menüsü yerine tek bakışta “profilime uygun kaç ilan var?” sorusuna cevap veren sade bir fintech düzenidir: gece mavisi (`#0F172A`), indigo (`#2563EB`), mint (`#10B981`) ve açık gri zemin (`#F8FAFC`). Karanlık zemin `#090D16`.
+Arayüz tek aileden kuruludur: mürekkep `#102A32`, derin deniz `#1A4A57` ve zemin `#F4F7F8`. Koyu mod `#102027`.
 
 ## Ne var, ne yok
 

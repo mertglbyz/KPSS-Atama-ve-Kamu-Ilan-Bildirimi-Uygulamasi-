@@ -59,13 +59,13 @@ export function Button({
     secondary: 'border border-line bg-white dark:border-slate-700 dark:bg-slate-800',
     ghost: 'bg-transparent',
   };
-  const text = variant === 'primary' ? 'text-white' : 'text-brand-800 dark:text-blue-100';
+  const text = variant === 'primary' ? 'text-white' : 'text-ink dark:text-white';
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
-      style={variant === 'primary' ? { shadowColor: '#14283F', shadowOpacity: 0.22, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 3 } : undefined}
+      style={variant === 'primary' ? { shadowColor: '#111827', shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 3 } : undefined}
       className={`items-center rounded-2xl px-4 py-4 ${variants[variant]} ${disabled ? 'opacity-50' : ''}`}
     >
       <Text className={`text-base font-semibold ${text}`}>{label}</Text>
@@ -139,7 +139,7 @@ export function ToggleRow({ label, detail, value, onValueChange }: { label: stri
         <Text className="font-semibold text-ink dark:text-white">{label}</Text>
         {detail ? <Text className="mt-1 text-xs leading-4 text-muted">{detail}</Text> : null}
       </View>
-      <Switch value={value} onValueChange={onValueChange} trackColor={{ true: '#2563EB', false: '#CBD5E1' }} />
+      <Switch value={value} onValueChange={onValueChange} trackColor={{ true: '#1A4A57', false: '#D5DEE2' }} />
     </View>
   );
 }
@@ -147,7 +147,7 @@ export function ToggleRow({ label, detail, value, onValueChange }: { label: stri
 export function Banner({ text }: { text: string }) {
   return (
     <View className="mb-4 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-      <Text className="text-sm leading-5 text-brand-800 dark:text-blue-100">{text}</Text>
+      <Text className="text-sm leading-5 text-ink dark:text-slate-100">{text}</Text>
     </View>
   );
 }

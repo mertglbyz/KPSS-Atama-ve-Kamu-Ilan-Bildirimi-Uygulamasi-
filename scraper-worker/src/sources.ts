@@ -1,89 +1,264 @@
+import https from 'node:https';
+import { URL } from 'node:url';
 import * as cheerio from 'cheerio';
 import type { DiscoveredAd } from './types';
 
-const HEADERS = {
-  'User-Agent': 'KPSSAtamaBot/1.0 (kamu ilan takibi; iletisim: destek)',
+const HEADERS: Record<string, string> = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
   Accept: 'text/html,application/json',
 };
 
-async function fetchText(url: string): Promise<string | null> {
-  const response = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(20000) });
-  if (!response.ok) throw new Error(`${url} ${response.status}`);
-  return response.text();
+type ResponseBody = { status: number; headers: Record<string, string | string[] | undefined>; body: Buffer };
+
+function requestOnce(url: string, init: { method?: string; body?: string; headers?: Record<string, string>; insecure?: boolean }): Promise<ResponseBody> {
+  return new Promise((resolve, reject) => {
+    const target = new URL(url);
+    const req = https.request(
+      {
+        protocol: target.protocol,
+        hostname: target.hostname,
+        path: `${target.pathname}${target.search}`,
+        method: init.method ?? 'GET',
+        headers: init.headers,
+        rejectUnauthorized: !init.insecure,
+        timeout: 25000,
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => resolve({ status: res.statusCode ?? 0, headers: res.headers, body: Buffer.concat(chunks) }));
+      },
+    );
+    req.on('error', reject);
+    req.on('timeout', () => req.destroy(new Error(`zaman aşımı ${url}`)));
+    if (init.body) req.write(init.body);
+    req.end();
+  });
+}
+
+async function request(url: string, init: { method?: string; body?: string; headers?: Record<string, string> } = {}, redirects = 0): Promise<ResponseBody> {
+  let response: ResponseBody;
+  try {
+    response = await requestOnce(url, init);
+  } catch (error) {
+    const message = error instanceof Error ? `${error.message} ${String(error.cause ?? '')}` : String(error);
+    if (!/certificate|UNABLE_TO_VERIFY|altname/i.test(message)) throw error;
+    response = await requestOnce(url, { ...init, insecure: true });
+  }
+  const location = response.headers.location;
+  if (response.status >= 300 && response.status < 400 && location && redirects < 4) {
+    return request(new URL(Array.isArray(location) ? location[0] : location, url).toString(), init, redirects + 1);
+  }
+  return response;
+}
+
+async function fetchText(url: string): Promise<string> {
+  const response = await request(url);
+  if (response.status >= 400) throw new Error(`${url} ${response.status}`);
+  return response.body.toString('utf8');
+}
+
+function textOf(html: string): string {
+  const $ = cheerio.load(html);
+  $('script, style, noscript').remove();
+  return $('body').text().replace(/\s+/g, ' ').trim().slice(0, 8000);
+}
+
+type IlanGovAd = {
+  id?: string;
+  adNo?: string;
+  advertiserName?: string;
+  title?: string;
+  addressCityName?: string;
+  publishStartDate?: string;
+  urlStr?: string;
+  values?: { key?: string; value?: string }[];
+  adTypeFilters?: { key?: string; value?: string }[];
+  adSourceName?: string;
+};
+
+async function ilanGovPage(page: number): Promise<{ total: number; ads: IlanGovAd[] }> {
+  const pageSize = 12;
+  const response = await request('https://www.ilan.gov.tr/api/api/services/app/Ad/AdsByFilter', {
+    method: 'POST',
+    headers: {
+      ...HEADERS,
+      Accept: 'text/plain',
+      'Content-Type': 'application/json-patch+json',
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-Request-Origin': 'IGT-UI',
+      Origin: 'https://www.ilan.gov.tr',
+      Referer: 'https://www.ilan.gov.tr/ilan/kategori/8/kamu-akademik-personel',
+    },
+    body: JSON.stringify({
+      keys: { txv: ['8'], currentPage: [String(page)] },
+      skipCount: (page - 1) * pageSize,
+      maxResultCount: pageSize,
+    }),
+  });
+  if (response.status === 403) throw new Error('ilan.gov.tr otomatik isteği reddetti (403)');
+  if (response.status >= 400) throw new Error(`ilan.gov.tr ${response.status}`);
+  const payload = JSON.parse(response.body.toString('utf8')) as { result?: { numFound?: number; ads?: IlanGovAd[] } };
+  return { total: payload.result?.numFound ?? 0, ads: payload.result?.ads ?? [] };
 }
 
 export async function discoverIlanGov(): Promise<DiscoveredAd[]> {
-  const response = await fetch('https://www.ilan.gov.tr/api/api/services/app/Ad/AdsByFilter', {
+  const found: DiscoveredAd[] = [];
+  const seen = new Set<string>();
+  let total = 1;
+  for (let page = 1; found.length < total && page <= 20; page += 1) {
+    const batch = await ilanGovPage(page);
+    total = batch.total;
+    if (!batch.ads.length) break;
+    for (const item of batch.ads) {
+      const path = item.urlStr || (item.id ? `/ilan/${item.id}` : '');
+      if (!path) continue;
+      const sourceUrl = new URL(path, 'https://www.ilan.gov.tr').toString();
+      if (seen.has(sourceUrl)) continue;
+      seen.add(sourceUrl);
+      const details = [...(item.values ?? []), ...(item.adTypeFilters ?? [])]
+        .map((row) => `${row.key ?? ''}: ${row.value ?? ''}`.trim())
+        .filter(Boolean);
+      found.push({
+        sourceName: 'ilan_gov_tr',
+        sourceUrl,
+        title: String(item.title || 'Kamu personel ilanı').slice(0, 180),
+        institutionName: String(item.advertiserName || item.adSourceName || 'Kurum'),
+        text: [
+          item.advertiserName,
+          item.title,
+          item.adNo ? `İlan no: ${item.adNo}` : '',
+          item.addressCityName ? `Şehir: ${item.addressCityName}` : '',
+          item.publishStartDate ? `Yayın: ${item.publishStartDate}` : '',
+          ...details,
+        ].filter(Boolean).join('\n').slice(0, 8000),
+      });
+    }
+  }
+  return found;
+}
+
+export async function discoverKamuilan(): Promise<DiscoveredAd[]> {
+  const html = await fetchText('https://kamuilan.sbb.gov.tr/');
+  const $ = cheerio.load(html);
+  const ads: DiscoveredAd[] = [];
+  const seen = new Set<string>();
+  $('a[href*="ilanDetay.aspx"]').each((_, element) => {
+    const href = $(element).attr('href');
+    if (!href) return;
+    const sourceUrl = new URL(href, 'https://kamuilan.sbb.gov.tr/').toString();
+    if (seen.has(sourceUrl)) return;
+    seen.add(sourceUrl);
+    const card = $(element).closest('li, article, .card, tr').text().replace(/\s+/g, ' ').trim();
+    const title = ($(element).text().replace(/\s+/g, ' ').trim() || card || 'Kamu personel ilanı')
+      .replace(/([A-Za-zÇĞİÖŞÜçğıöşü])(\d)/g, '$1 $2')
+      .slice(0, 180);
+    const institutionName = title.split(/\d/)[0]?.replace(/alacak.*/i, '').trim() || 'Kamu kurumu';
+    ads.push({
+      sourceName: 'kamuilan',
+      sourceUrl,
+      title,
+      institutionName,
+      text: card || title,
+    });
+  });
+  return ads;
+}
+
+export async function discoverYerelYonetimler(): Promise<DiscoveredAd[]> {
+  const html = await fetchText('https://yerelyonetimler.csb.gov.tr/duyurular');
+  const $ = cheerio.load(html);
+  const ads: DiscoveredAd[] = [];
+  $('a[href*="duyuru-"]').each((_, element) => {
+    const href = $(element).attr('href');
+    const title = $(element).text().replace(/\s+/g, ' ').trim();
+    if (!href || !title) return;
+    if (!/al[ıi]m|memur|personel|zabıta|zabita|sözleşmeli|sozlesmeli/i.test(title)) return;
+    const sourceUrl = new URL(href, 'https://yerelyonetimler.csb.gov.tr/').toString();
+    if (ads.some((item) => item.sourceUrl === sourceUrl)) return;
+    ads.push({
+      sourceName: 'yerel_yonetimler',
+      sourceUrl,
+      title: title.slice(0, 180),
+      institutionName: 'Yerel yönetim',
+      text: title,
+    });
+  });
+  return ads;
+}
+
+type KariyerAd = {
+  guid?: string;
+  kurumAdi?: string;
+  birimAdi?: string;
+  ilanBaslik?: string;
+  ilanTipi?: number;
+  ilanTuru?: string;
+  basTarih?: string;
+  bitTarih?: string;
+  basvuruLinki?: string;
+};
+
+export async function discoverKariyerKapisi(): Promise<DiscoveredAd[]> {
+  const response = await request('https://api.kariyerkapisi.gov.tr/api/ilan/GetIseAlimPage', {
     method: 'POST',
     headers: {
       ...HEADERS,
       'Content-Type': 'application/json',
-      'X-Request-Origin': 'IGT-UI',
-      Origin: 'https://www.ilan.gov.tr',
-      Referer: 'https://www.ilan.gov.tr/',
+      Origin: 'https://kariyerkapisi.gov.tr',
+      Referer: 'https://kariyerkapisi.gov.tr/isealim',
     },
-    body: JSON.stringify({
-      keys: { txv: [73], ats: [5], currentPage: [1] },
-      sorting: 'publish_time desc',
-      skipCount: 0,
-      maxResultCount: 20,
-    }),
-    signal: AbortSignal.timeout(20000),
+    body: JSON.stringify({ krM_ID: 0, searchText: '', il: '0', ilanTuru: '0' }),
   });
-  if (!response.ok) throw new Error(`ilan.gov.tr ${response.status}`);
-  const payload = (await response.json()) as { result?: { items?: Record<string, unknown>[] }; items?: Record<string, unknown>[] };
-  const items = payload.result?.items ?? payload.items ?? [];
-  return items.slice(0, 20).map((item) => {
-    const id = String(item.id ?? item.adId ?? '');
-    return {
-      sourceName: 'ilan_gov_tr',
-      sourceUrl: id ? `https://www.ilan.gov.tr/ilan/${id}` : String(item.url ?? ''),
-      title: String(item.title ?? item.adTitle ?? 'Personel ilanı'),
-      institutionName: String(item.advertiserName ?? item.customerName ?? item.publisherName ?? 'Kurum'),
-      text: JSON.stringify(item).slice(0, 8000),
-    };
-  }).filter((item) => item.sourceUrl.startsWith('http'));
+  if (response.status >= 400) throw new Error(`kariyerkapisi.gov.tr ${response.status}`);
+  const payload = JSON.parse(response.body.toString('utf8')) as { searchIlan?: KariyerAd[] };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return (payload.searchIlan ?? []).flatMap((item) => {
+    const ends = item.bitTarih ? new Date(item.bitTarih) : null;
+    if (ends && !Number.isNaN(ends.getTime()) && ends < today) return [];
+    const sourceUrl = item.ilanTipi === 1 || !item.basvuruLinki
+      ? `https://kariyerkapisi.gov.tr/IlanDetay?i=${item.guid}`
+      : item.basvuruLinki;
+    if (!sourceUrl.startsWith('http') || !item.guid) return [];
+    return [{
+      sourceName: 'kariyer_kapisi',
+      sourceUrl,
+      title: String(item.ilanBaslik || 'Kariyer Kapısı ilanı').slice(0, 180),
+      institutionName: String(item.kurumAdi || 'Kamu kurumu'),
+      text: [
+        item.kurumAdi,
+        item.birimAdi,
+        item.ilanBaslik,
+        item.ilanTuru ? `İlan türü: ${item.ilanTuru}` : '',
+        item.basTarih ? `Başlangıç: ${item.basTarih}` : '',
+        item.bitTarih ? `Bitiş: ${item.bitTarih}` : '',
+      ].filter(Boolean).join('\n'),
+    }];
+  });
 }
 
-const PAGES = [
-  { sourceName: 'kariyer_kapisi', url: 'https://isealimkariyerkapisi.cbiko.gov.tr/' },
-  { sourceName: 'kamuilan', url: 'https://kamuilan.sbb.gov.tr/' },
-  { sourceName: 'yerel_yonetimler', url: 'https://yerelyonetimler.csb.gov.tr/' },
-  { sourceName: 'iskur', url: 'https://www.iskur.gov.tr/' },
-];
-
-export async function discoverHtmlSources(): Promise<DiscoveredAd[]> {
-  const found: DiscoveredAd[] = [];
-  for (const page of PAGES) {
-    const html = await fetchText(page.url);
-    if (!html) continue;
+export async function enrichAd(ad: DiscoveredAd): Promise<DiscoveredAd> {
+  if (ad.sourceName === 'ilan_gov_tr') return ad;
+  try {
+    const html = await fetchText(ad.sourceUrl);
+    const text = textOf(html);
     const $ = cheerio.load(html);
-    $('a[href]').each((_, element) => {
-      const href = $(element).attr('href');
-      const label = $(element).text().replace(/\s+/g, ' ').trim();
-      if (!href || !label) return;
-      const absolute = new URL(href, page.url).toString();
-      const interesting = /personel|ilan|alım|alim|kadro|işçi|isci|memur/i.test(`${label} ${absolute}`);
-      if (!interesting) return;
-      found.push({
-        sourceName: page.sourceName,
-        sourceUrl: absolute,
-        title: label.slice(0, 180),
-        institutionName: page.sourceName,
-        text: label,
-        pdfUrl: absolute.toLowerCase().includes('.pdf') ? absolute : undefined,
-      });
-    });
+    const pdfHref = $('a[href*=".pdf"]').first().attr('href');
+    return {
+      ...ad,
+      text: text || ad.text,
+      pdfUrl: pdfHref ? new URL(pdfHref, ad.sourceUrl).toString() : ad.pdfUrl,
+    };
+  } catch {
+    return ad;
   }
-  const unique = new Map<string, DiscoveredAd>();
-  for (const ad of found) unique.set(ad.sourceUrl, ad);
-  return [...unique.values()].slice(0, 30);
 }
 
 export async function downloadPdf(url: string): Promise<Buffer | undefined> {
-  const response = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(25000) });
-  if (!response.ok) return undefined;
-  const type = response.headers.get('content-type') ?? '';
+  const response = await request(url);
+  if (response.status >= 400) return undefined;
+  const type = String(response.headers['content-type'] ?? '');
   if (!type.includes('pdf') && !url.toLowerCase().includes('.pdf')) return undefined;
-  return Buffer.from(await response.arrayBuffer());
+  return response.body;
 }

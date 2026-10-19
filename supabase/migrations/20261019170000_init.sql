@@ -475,7 +475,7 @@ begin
   )
   select
     coalesce((select total_cnt from ranked limit 1), 0),
-    case when coalesce(u.is_premium, false) then (select rnk from ranked where id = p_user_id) else null end,
+    (select rnk from ranked where id = p_user_id),
     coalesce(u.kpss_score, 0),
     coalesce(u.is_premium, false);
 end;
@@ -652,3 +652,13 @@ grant select, insert, update, delete on public.notifications to service_role;
 grant select, insert, update, delete on public.scraper_runs to service_role;
 grant select, insert, update, delete on public.base_scores to service_role;
 grant select, insert, update, delete on public.local_courses to service_role;
+
+-- Proje "yeni tabloları otomatik açma" kapalı olduğu için API rolleri ayrıca yetkilendirilir.
+grant select on table public.profiles to authenticated;
+grant select, insert, update, delete on table public.user_job_interactions to authenticated;
+grant select, update on table public.notifications to authenticated;
+grant select, insert on table public.support_messages to authenticated;
+grant select on table public.scraper_runs to authenticated;
+grant select, insert, update, delete on table public.profiles to service_role;
+grant select, insert, update, delete on table public.user_job_interactions to service_role;
+grant select, insert, update, delete on table public.support_messages to service_role;

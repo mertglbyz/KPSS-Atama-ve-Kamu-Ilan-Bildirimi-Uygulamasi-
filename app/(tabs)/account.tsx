@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { Button, Card, ErrorText, Screen, Title, ToggleRow } from '@/components/ui';
 import { saveProfile } from '@/lib/data';
+import { emptyDraft } from '@/lib/profile';
 import { registerPushToken } from '@/lib/notifications';
 import { restorePremium } from '@/lib/revenuecat';
 import { useAppStore } from '@/store/useAppStore';
@@ -84,6 +85,8 @@ export default function AccountScreen() {
           label="Profili sıfırla"
           variant="secondary"
           onPress={() => {
+            const cleared = emptyDraft();
+            if (mode === 'live' && userId) void saveProfile(userId, cleared);
             reset();
             router.replace('/(onboarding)/step1-personal');
           }}

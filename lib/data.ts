@@ -162,12 +162,12 @@ export async function fetchPosition(userId: string, positionId: string, draft: P
   return row ? mapPosition(row) : null;
 }
 
-export async function fetchRank(userId: string, draft: ProfileDraft, premium: boolean): Promise<CompetitorRank> {
+export async function fetchRank(userId: string, draft: ProfileDraft, _premium: boolean): Promise<CompetitorRank> {
   const score = toMatchProfile(draft).kpssScore;
   if (!supabase || useAppStore.getState().mode !== 'live') {
     const cohort = [92, 88, 86, 84, 81, 79, 76, 74, 71, 68, 64, score].filter((item) => item > 0).sort((a, b) => b - a);
     const rank = cohort.findIndex((item) => item === score) + 1;
-    return { totalCandidates: cohort.length, userRank: premium ? rank || null : null, userScore: score, unlocked: premium };
+    return { totalCandidates: cohort.length, userRank: rank || null, userScore: score, unlocked: true };
   }
   const department = draft.educations.find((item) => item.department)?.department ?? '';
   const { data, error } = await supabase.rpc('get_competitor_rank', { p_user_id: userId, p_department: department });

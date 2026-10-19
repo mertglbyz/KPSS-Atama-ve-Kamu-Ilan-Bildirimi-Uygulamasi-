@@ -12,6 +12,7 @@ const SCOPES = [
   ['all', 'Tümü'],
   ['matches', 'Bana uygun'],
   ['saved', 'Favoriler'],
+  ['archive', 'Geçmiş'],
   ['hidden', 'Gizlenen'],
 ] as const;
 
@@ -29,6 +30,7 @@ export default function JobsScreen() {
   const draft = useProfileStore((state) => state.draft);
   const interactions = useProfileStore((state) => state.interactions);
   const cards = useQuery({ queryKey: ['cards'], queryFn: () => fetchCards('active') });
+  const archive = useQuery({ queryKey: ['archive'], queryFn: () => fetchCards('archived'), enabled: scope === 'archive' });
   const matches = useQuery({ queryKey: ['matches', userId, draft, premium], enabled: Boolean(userId), queryFn: () => fetchMatches(userId!, draft, premium) });
 
   const rows = useMemo(() => {
@@ -44,9 +46,11 @@ export default function JobsScreen() {
           meta: `${job.quota} kontenjan · ${formatDay(job.applicationEndDate)}`,
         }));
     }
-    return (cards.data ?? [])
+    const source = scope === 'archive' ? archive.data ?? [] : cards.data ?? [];
+    return source
       .filter((card) => {
         const interaction = interactions[card.positionId];
+        if (scope === 'archive') return true;
         if (scope === 'saved') return interaction?.isSaved;
         if (scope === 'hidden') return interaction?.isHidden;
         return !interaction?.isHidden;
@@ -58,7 +62,7 @@ export default function JobsScreen() {
         institution: card.institutionName,
         meta: `${card.educationLevel} · ${card.cities.slice(0, 2).join(', ') || 'Tüm Türkiye'} · ${formatDay(card.applicationEndDate)}`,
       }));
-  }, [cards.data, interactions, matches.data, query, scope]);
+  }, [archive.data, cards.data, interactions, matches.data, query, scope]);
 
   return (
     <Screen>
@@ -80,7 +84,7 @@ export default function JobsScreen() {
           </View>
         </Card>
       ) : rows.length === 0 ? (
-        <Text className="mt-6 text-muted">{cards.isLoading ? 'İlanlar yükleniyor.' : 'Bu görünümde ilan yok.'}</Text>
+        <Text className="mt-6 text-muted">{cards.isLoading || archive.isLoading ? 'İlanlar yükleniyor.' : 'Bu görünümde ilan yok.'}</Text>
       ) : (
         rows.map((row) => (
           <Pressable key={row.id} onPress={() => router.push(`/position/${row.id}`)} className="mb-3 rounded-3xl border border-line bg-white p-4 dark:border-slate-800 dark:bg-slate-900">

@@ -36,9 +36,9 @@ export default function RootLayout() {
           <Stack.Screen name="(onboarding)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="position/[id]" options={{ headerShown: true, title: 'İlan', headerTintColor: '#0F172A', headerStyle: { backgroundColor: '#F8FAFC' } }} />
-          <Stack.Screen name="legal/privacy" options={{ headerShown: true, title: 'Gizlilik', headerTintColor: '#0F172A', headerStyle: { backgroundColor: '#F8FAFC' } }} />
-          <Stack.Screen name="legal/terms" options={{ headerShown: true, title: 'Koşullar', headerTintColor: '#0F172A', headerStyle: { backgroundColor: '#F8FAFC' } }} />
+          <Stack.Screen name="position/[id]" options={{ headerShown: true, title: 'İlan', headerTintColor: '#111827', headerStyle: { backgroundColor: '#F4F7F8' } }} />
+          <Stack.Screen name="legal/privacy" options={{ headerShown: true, title: 'Gizlilik', headerTintColor: '#111827', headerStyle: { backgroundColor: '#F4F7F8' } }} />
+          <Stack.Screen name="legal/terms" options={{ headerShown: true, title: 'Koşullar', headerTintColor: '#111827', headerStyle: { backgroundColor: '#F4F7F8' } }} />
         </Stack>
       </AppProviders>
     </QueryClientProvider>

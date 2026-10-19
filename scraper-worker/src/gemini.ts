@@ -1,3 +1,4 @@
+import './load-env';
 import { GoogleGenAI, Type } from '@google/genai';
 import type { ParsedAnnouncement } from './types';
 
@@ -47,7 +48,8 @@ export async function parseAnnouncement(text: string, pdf?: Buffer): Promise<Par
     `Aşağıdaki kamu personel alımı ilan metnini ve varsa ekteki PDF kılavuzunu analiz et.
 İlandaki her kadro satırını ayrı bir JSON öğesi olarak çıkar.
 Bölüm adlarını standartlaştır. Lise mezuniyetini education_level olarak Ortaöğretim yaz. "Herhangi bir lisans/önlisans/ortaöğretim" ifadesinde is_general_degree true olsun.
-Tarihleri ISO 8601 yaz. Ek metin: ${text.slice(0, 12000)}`,
+Bugün ${new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}. Tarihleri ISO 8601 yaz. Metinde yıl yoksa içinde bulunulan yılı kullan. 2024 ve öncesini yazma.
+Ek metin: ${text.slice(0, 12000)}`,
   ];
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',

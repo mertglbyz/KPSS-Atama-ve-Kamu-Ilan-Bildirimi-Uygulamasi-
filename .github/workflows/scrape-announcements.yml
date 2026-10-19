@@ -2,7 +2,8 @@ name: Scrape announcements
 
 on:
   schedule:
-    - cron: '0 */4 * * *'
+    # Türkiye saati 00:00, 09:00, 15:00 ve 20:00 (UTC+3, yaz saati yok).
+    - cron: '0 6,12,17,21 * * *'
   workflow_dispatch:
 
 jobs:
