@@ -1,0 +1,58 @@
+import { GoogleGenAI, Type } from '@google/genai';
+import type { ParsedAnnouncement } from './types';
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const responseSchema = {
+  type: Type.OBJECT,
+  properties: {
+    institution_name: { type: Type.STRING },
+    application_start_date: { type: Type.STRING },
+    application_end_date: { type: Type.STRING },
+    positions: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          position_title: { type: Type.STRING },
+          quota: { type: Type.INTEGER },
+          cities: { type: Type.ARRAY, items: { type: Type.STRING } },
+          education_level: { type: Type.STRING, enum: ['Lise', 'Önlisans', 'Lisans'] },
+          is_general_degree: { type: Type.BOOLEAN },
+          allowed_departments: { type: Type.ARRAY, items: { type: Type.STRING } },
+          requires_kpss: { type: Type.BOOLEAN },
+          kpss_type: { type: Type.STRING },
+          min_kpss_score: { type: Type.NUMBER },
+          min_age: { type: Type.INTEGER },
+          max_age: { type: Type.INTEGER },
+          min_height_male: { type: Type.INTEGER },
+          min_height_female: { type: Type.INTEGER },
+          required_licenses: { type: Type.ARRAY, items: { type: Type.STRING } },
+          requires_security_card: { type: Type.BOOLEAN },
+          requires_disability: { type: Type.BOOLEAN },
+          min_sgk_days: { type: Type.INTEGER },
+          raw_requirements_text: { type: Type.STRING },
+        },
+        required: ['position_title', 'education_level', 'is_general_degree'],
+      },
+    },
+  },
+};
+
+export async function parseAnnouncement(text: string, pdf?: Buffer): Promise<ParsedAnnouncement> {
+  const contents = [
+    ...(pdf
+      ? [{ inlineData: { data: pdf.toString('base64'), mimeType: 'application/pdf' } }]
+      : []),
+    `Aşağıdaki kamu personel alımı ilan metnini ve varsa ekteki PDF kılavuzunu analiz et.
+İlandaki her kadro satırını ayrı bir JSON öğesi olarak çıkar.
+Bölüm adlarını standartlaştır. "Herhangi bir lisans/önlisans/lise" ifadesinde is_general_degree true olsun.
+Tarihleri ISO 8601 yaz. Ek metin: ${text.slice(0, 12000)}`,
+  ];
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents,
+    config: { responseMimeType: 'application/json', responseSchema },
+  });
+  return JSON.parse(response.text ?? '{}') as ParsedAnnouncement;
+}

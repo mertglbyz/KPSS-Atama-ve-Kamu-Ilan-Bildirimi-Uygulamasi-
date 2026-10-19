@@ -1,0 +1,19 @@
+{
+  "name": "kpss-scraper-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scrape": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^1.22.0",
+    "@supabase/supabase-js": "^2.118.0",
+    "cheerio": "^1.1.2",
+    "kpss-atama-app": "file:.."
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
