@@ -21,6 +21,10 @@ export type ParsedPosition = {
   max_age?: number;
   min_height_male?: number;
   min_height_female?: number;
+  max_height_male?: number;
+  max_height_female?: number;
+  min_weight?: number;
+  max_weight?: number;
   required_licenses?: string[];
   requires_security_card?: boolean;
   requires_disability?: boolean;
@@ -35,5 +39,6 @@ export type ParsedAnnouncement = {
   institution_name?: string;
   application_start_date?: string;
   application_end_date?: string;
+  notice_kind?: 'active' | 'revised' | 'cancelled';
   positions?: ParsedPosition[];
 };

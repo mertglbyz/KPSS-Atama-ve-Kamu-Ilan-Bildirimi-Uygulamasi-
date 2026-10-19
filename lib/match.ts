@@ -25,15 +25,27 @@ export function evaluatePosition(profile: MatchProfile, job: JobPosition): Match
   if (new Date(job.applicationEndDate).getTime() < Date.now()) gaps.push('Başvuru süresi dolmuş');
   if (!educationMatches(profile, job)) gaps.push('Eğitim veya bölüm şartı');
   if (job.requiresKpss) {
+    const scores = [
+      { type: profile.kpssType, score: profile.kpssScore },
+      ...(profile.kpssScores ?? []),
+    ];
+    const sameType = (left: string, right: string) => left.replace(/\s|kpss|grubu/gi, '').toLocaleLowerCase('tr-TR') === right.replace(/\s|kpss|grubu/gi, '').toLocaleLowerCase('tr-TR');
+    const fitting = scores.find((item) => !job.kpssType || sameType(item.type, job.kpssType));
     if (!profile.hasKpss) gaps.push('KPSS puanı');
-    else if (job.kpssType && profile.kpssType !== job.kpssType) gaps.push(`${job.kpssType} puan türü`);
-    else if (profile.kpssScore < job.minKpssScore) gaps.push(`En az ${job.minKpssScore} KPSS`);
+    else if (!fitting) gaps.push(`${job.kpssType} puan türü`);
+    else if (fitting.score < job.minKpssScore) gaps.push(`En az ${job.minKpssScore} KPSS`);
   }
   if (profile.ydsScore < job.minYdsScore) gaps.push(`En az ${job.minYdsScore} YDS`);
   if (profile.age != null && (profile.age < job.minAge || profile.age > job.maxAge)) gaps.push('Yaş şartı');
   if (profile.gender && !job.allowedGenders.includes(profile.gender)) gaps.push('Cinsiyet şartı');
-  if (profile.height != null && profile.gender === 'Erkek' && profile.height < job.minHeightMale) gaps.push('Boy şartı');
-  if (profile.height != null && profile.gender === 'Kadın' && profile.height < job.minHeightFemale) gaps.push('Boy şartı');
+  const heightLimited = job.minHeightMale > 0 || job.minHeightFemale > 0 || job.maxHeightMale > 0 || job.maxHeightFemale > 0;
+  if (heightLimited && profile.height == null) gaps.push('Boy bilgisi');
+  if (profile.height != null && profile.gender === 'Erkek' && (profile.height < job.minHeightMale || (job.maxHeightMale > 0 && profile.height > job.maxHeightMale))) gaps.push('Boy şartı');
+  if (profile.height != null && profile.gender === 'Kadın' && (profile.height < job.minHeightFemale || (job.maxHeightFemale > 0 && profile.height > job.maxHeightFemale))) gaps.push('Boy şartı');
+  const weightLimited = job.minWeight > 0 || job.maxWeight > 0;
+  if (weightLimited && profile.weight == null) gaps.push('Kilo bilgisi');
+  if (profile.weight != null && job.minWeight > 0 && profile.weight < job.minWeight) gaps.push('Kilo şartı');
+  if (profile.weight != null && job.maxWeight > 0 && profile.weight > job.maxWeight) gaps.push('Kilo şartı');
   const missingLicenses = job.requiredLicenses.filter((license) => !profile.driverLicenses.includes(license));
   if (missingLicenses.length) gaps.push(`${missingLicenses.join(', ')} ehliyet`);
   if (job.requiresSecurityCard && !profile.hasSecurityCard) gaps.push('Güvenlik görevlisi kartı');

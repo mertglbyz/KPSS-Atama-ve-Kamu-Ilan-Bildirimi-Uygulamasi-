@@ -1,6 +1,7 @@
 import https from 'node:https';
 import { URL } from 'node:url';
 import * as cheerio from 'cheerio';
+import { documentLinks, docxToText } from './documents';
 import type { DiscoveredAd } from './types';
 
 const HEADERS: Record<string, string> = {
@@ -36,7 +37,7 @@ function requestOnce(url: string, init: { method?: string; body?: string; header
   });
 }
 
-async function request(url: string, init: { method?: string; body?: string; headers?: Record<string, string> } = {}, redirects = 0): Promise<ResponseBody> {
+export async function request(url: string, init: { method?: string; body?: string; headers?: Record<string, string> } = {}, redirects = 0): Promise<ResponseBody> {
   let response: ResponseBody;
   try {
     response = await requestOnce(url, init);
@@ -243,13 +244,20 @@ export async function enrichAd(ad: DiscoveredAd): Promise<DiscoveredAd> {
   try {
     const html = await fetchText(ad.sourceUrl);
     const text = textOf(html);
-    const $ = cheerio.load(html);
-    const pdfHref = $('a[href*=".pdf"]').first().attr('href');
-    return {
-      ...ad,
-      text: text || ad.text,
-      pdfUrl: pdfHref ? new URL(pdfHref, ad.sourceUrl).toString() : ad.pdfUrl,
-    };
+    const links = documentLinks(html, ad.sourceUrl);
+    const parts = [text || ad.text];
+    let pdfUrl = ad.pdfUrl;
+    for (const link of links) {
+      const file = await request(link);
+      if (file.status >= 400) continue;
+      if (/\.docx(\?|$)/i.test(link)) {
+        const docx = await docxToText(file.body);
+        if (docx) parts.push(docx);
+      } else if (!pdfUrl) {
+        pdfUrl = link;
+      }
+    }
+    return { ...ad, text: parts.filter(Boolean).join('\n').slice(0, 20000), pdfUrl };
   } catch {
     return ad;
   }

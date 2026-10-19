@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
+import { JobChips, JobNotice } from '@/components/JobFacts';
 import { Button, Card, Screen } from '@/components/ui';
+import { openOfficialSource, sourceLabel } from '@/lib/source';
 import { fetchPosition, upsertInteraction } from '@/lib/data';
 import { evaluatePosition } from '@/lib/match';
 import { formatDate } from '@/lib/format';
@@ -48,13 +50,21 @@ export default function PositionScreen() {
       <Text className="text-sm font-semibold text-brand-700">{job.institutionName}</Text>
       <Text className="mt-1 text-2xl font-bold text-ink dark:text-white">{job.positionTitle}</Text>
       <Text className="mt-2 text-sm text-muted">{job.announcementTitle}</Text>
+      <JobNotice start={job.applicationStartDate} end={job.applicationEndDate} />
+      <JobChips end={job.applicationEndDate} education={job.educationLevel} quota={job.quota} requiresKpss={job.requiresKpss} kpssType={job.kpssType} minKpssScore={job.minKpssScore} />
       <Card className="mt-4">
         <Text className="text-ink dark:text-white">Kontenjan: {job.quota}</Text>
         <Text className="mt-1 text-ink dark:text-white">Eğitim: {job.educationLevel}</Text>
         <Text className="mt-1 text-ink dark:text-white">İller: {job.cities.join(', ') || 'Belirtilmedi'}</Text>
         <Text className="mt-1 text-ink dark:text-white">Başvuru bitiş: {formatDate(job.applicationEndDate)}</Text>
-        {job.sourceUrl ? <Text className="mt-2 text-xs text-muted">{job.sourceUrl}</Text> : null}
+        <Text className="mt-2 text-sm text-muted">Kaynak: {sourceLabel(job.sourceName)}</Text>
       </Card>
+      {job.sourceUrl ? (
+        <View className="mt-3">
+          <Button label="Resmi ilanı aç" onPress={() => void openOfficialSource(job.sourceUrl)} />
+          <Text className="mt-2 text-center text-xs text-muted">İlanın yayınlandığı sitede tam metni ve ekleri görürsün.</Text>
+        </View>
+      ) : null}
       {premium && verdict ? (
         <Card className="mt-3">
           <Text className="font-semibold text-ink dark:text-white">{verdict.matched ? 'Profilinle uyumlu' : 'Profilinle uymuyor'}</Text>

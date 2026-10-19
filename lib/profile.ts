@@ -20,6 +20,7 @@ export const emptyDraft = (): ProfileDraft => ({
   hasKpss: null,
   kpssType: 'P3',
   kpssScore: '',
+  kpssScores: [],
   ydsScore: '',
   alesScore: '',
   driverLicenses: [],
@@ -54,6 +55,10 @@ export function toMatchProfile(draft: ProfileDraft): MatchProfile {
     hasKpss: draft.hasKpss === true,
     kpssType: draft.kpssType,
     kpssScore: parseScore(draft.kpssScore) ?? 0,
+    kpssScores: (draft.kpssScores ?? [])
+      .map((item) => ({ type: item.type, score: parseScore(item.score) ?? 0 }))
+      .filter((item) => item.type && item.score > 0),
+    weight: Number(draft.weight) || null,
     ydsScore: parseScore(draft.ydsScore) ?? 0,
     alesScore: parseScore(draft.alesScore) ?? 0,
     driverLicenses: draft.driverLicenses,
@@ -81,6 +86,9 @@ export function toProfileUpdate(draft: ProfileDraft) {
     has_kpss: draft.hasKpss === true,
     kpss_type: draft.kpssType,
     kpss_score: parseScore(draft.kpssScore) ?? 0,
+    kpss_scores: (draft.kpssScores ?? [])
+      .map((item) => ({ type: item.type, score: parseScore(item.score) ?? 0 }))
+      .filter((item) => item.type && item.score > 0),
     yds_score: parseScore(draft.ydsScore) ?? 0,
     ales_score: parseScore(draft.alesScore) ?? 0,
     driver_licenses: draft.driverLicenses,
@@ -121,6 +129,15 @@ export function fromProfileRow(row: Record<string, unknown>): ProfileDraft {
     hasKpss: Boolean(row.has_kpss),
     kpssType: String(row.kpss_type ?? 'P3'),
     kpssScore: row.kpss_score == null ? '' : String(row.kpss_score).replace('.', ','),
+    kpssScores: Array.isArray(row.kpss_scores)
+      ? row.kpss_scores
+          .map((item) => {
+            const entry = item as { type?: string; score?: number };
+            if (!entry.type) return null;
+            return { type: entry.type, score: entry.score == null ? '' : String(entry.score).replace('.', ',') };
+          })
+          .filter((item): item is { type: string; score: string } => item != null)
+      : [],
     ydsScore: row.yds_score ? String(row.yds_score).replace('.', ',') : '',
     alesScore: row.ales_score ? String(row.ales_score).replace('.', ',') : '',
     driverLicenses: Array.isArray(row.driver_licenses) ? row.driver_licenses.map(String) : [],

@@ -9,6 +9,11 @@ export type EducationEntry = {
   department: string;
 };
 
+export type KpssScoreEntry = {
+  type: string;
+  score: string;
+};
+
 export type ProfileDraft = {
   nickname: string;
   age: string;
@@ -20,6 +25,7 @@ export type ProfileDraft = {
   hasKpss: boolean | null;
   kpssType: string;
   kpssScore: string;
+  kpssScores: KpssScoreEntry[];
   ydsScore: string;
   alesScore: string;
   driverLicenses: string[];
@@ -45,6 +51,8 @@ export type MatchProfile = {
   hasKpss: boolean;
   kpssType: string;
   kpssScore: number;
+  kpssScores: { type: string; score: number }[];
+  weight: number | null;
   ydsScore: number;
   alesScore: number;
   driverLicenses: string[];
@@ -74,6 +82,10 @@ export type JobPosition = {
   allowedGenders: Gender[];
   minHeightMale: number;
   minHeightFemale: number;
+  maxHeightMale: number;
+  maxHeightFemale: number;
+  minWeight: number;
+  maxWeight: number;
   requiredLicenses: string[];
   requiresSecurityCard: boolean;
   requiresDisability: boolean;
@@ -101,6 +113,9 @@ export type PublicJobCard = {
   applicationEndDate: string;
   sourceName: string | null;
   sourceUrl: string | null;
+  requiresKpss: boolean | null;
+  kpssType: string | null;
+  minKpssScore: number | null;
   status: 'published' | 'archived';
   createdAt: string;
 };

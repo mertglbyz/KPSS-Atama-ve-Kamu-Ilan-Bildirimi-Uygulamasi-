@@ -1,29 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { X } from 'lucide-react-native';
 import { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Button, ErrorText, Screen } from '@/components/ui';
 import { PLANS } from '@/constants/catalog';
-import { fetchSummary } from '@/lib/data';
 import { isSupabaseConfigured } from '@/lib/env';
 import { loadOfferings, presentStorePaywall, purchaseProduct, restorePremium } from '@/lib/revenuecat';
 import { useAppStore } from '@/store/useAppStore';
-import { useProfileStore } from '@/store/useProfileStore';
 
 export default function PaywallScreen() {
   const router = useRouter();
-  const userId = useAppStore((state) => state.userId);
   const mode = useAppStore((state) => state.mode);
   const setPremium = useAppStore((state) => state.setPremium);
   const setDemoPremium = useAppStore((state) => state.setDemoPremium);
-  const draft = useProfileStore((state) => state.draft);
-  const summary = useQuery({ queryKey: ['summary', userId, draft], enabled: Boolean(userId), queryFn: () => fetchSummary(userId!, draft) });
   const offerings = useQuery({ queryKey: ['offerings'], queryFn: loadOfferings });
   const [selected, setSelected] = useState<(typeof PLANS)[number]['id']>('yearly');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const count = summary.data?.totalPositions ?? 0;
 
   async function buy() {
     const plan = PLANS.find((item) => item.id === selected)!;
@@ -44,8 +39,18 @@ export default function PaywallScreen() {
 
   return (
     <Screen>
+      <View className="mt-2 flex-row justify-end">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Kapat"
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
+          className="h-11 w-11 items-center justify-center rounded-2xl bg-ink"
+        >
+          <X color="#F4F7F8" size={20} strokeWidth={2.5} />
+        </Pressable>
+      </View>
       <Animated.View entering={FadeInDown.duration(420)}>
-        <Text className="mt-3 text-3xl font-bold leading-9 text-ink dark:text-white">Profiline uygun {count} güncel ilanı kaçırma</Text>
+        <Text className="mt-4 text-center text-3xl font-bold leading-9 text-ink dark:text-white">Profiline uygun ilanları kaçırma</Text>
         <View className="my-4 gap-2">
           {[
             'Profilinle eşleşen memur, sözleşmeli ve işçi ilanları',
@@ -72,20 +77,8 @@ export default function PaywallScreen() {
         })}
         <ErrorText text={error} />
         <Button label={pending ? 'İşleniyor' : 'Devam et'} onPress={buy} disabled={pending} />
-        <View className="mt-3 gap-2">
-          <Button
-            label="Satın alımları geri yükle"
-            variant="ghost"
-            onPress={async () => {
-              const active = await restorePremium();
-              if (active) {
-                setPremium(true);
-                router.replace('/(tabs)');
-              } else setError('Aktif abonelik bulunamadı.');
-            }}
-          />
-          {Platform.OS !== 'web' ? <Button label="Mağaza paywall'unu aç" variant="secondary" onPress={() => presentStorePaywall()} /> : null}
-          {mode === 'demo' || !isSupabaseConfigured ? (
+        {mode === 'demo' || !isSupabaseConfigured ? (
+          <View className="mt-3">
             <Button
               label="Örnek modda Pro arayüzünü önizle"
               variant="secondary"
@@ -94,13 +87,36 @@ export default function PaywallScreen() {
                 router.replace('/(tabs)/jobs');
               }}
             />
-          ) : null}
-          <Button label="Şimdilik ücretsiz devam et" variant="ghost" onPress={() => router.replace('/(tabs)')} />
-          <Text className="text-center text-xs text-muted">
-            Abonelik mağaza hesabın üzerinden yenilenir ve iptal edilir. Vitrin fiyatları Türkiye için planlanan fiyatlardır; ödeme anında mağaza fiyatı geçerlidir.
-          </Text>
-          <Pressable onPress={() => router.push('/legal/terms')}>
-            <Text className="text-center text-sm font-semibold text-brand-700">Kullanım koşulları ve gizlilik</Text>
+          </View>
+        ) : null}
+        {Platform.OS !== 'web' ? (
+          <Pressable accessibilityRole="button" onPress={() => presentStorePaywall()} className="mt-4">
+            <Text className="text-center text-sm text-muted">Mağaza ekranından satın al</Text>
+          </Pressable>
+        ) : null}
+        <Text className="mt-4 px-2 text-center text-xs leading-5 text-muted">
+          Abonelik, satın aldığın mağaza hesabından yenilenir. Dönem bitmeden en az 24 saat önce iptal edilmezse yenilenir. Ekrandaki fiyat örnektir. Ödeme anında mağaza fiyatı geçerlidir.
+        </Text>
+        <View className="mt-5 flex-row flex-wrap items-center justify-center">
+          <Pressable accessibilityRole="link" onPress={() => router.push('/legal/terms')}>
+            <Text className="text-xs text-muted">Kullanım koşulları</Text>
+          </Pressable>
+          <Text className="px-2 text-xs text-muted">·</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={async () => {
+              const active = await restorePremium();
+              if (active) {
+                setPremium(true);
+                router.replace('/(tabs)');
+              } else setError('Aktif abonelik bulunamadı.');
+            }}
+          >
+            <Text className="text-xs text-muted">Satın alımları geri yükle</Text>
+          </Pressable>
+          <Text className="px-2 text-xs text-muted">·</Text>
+          <Pressable accessibilityRole="link" onPress={() => router.push('/legal/privacy')}>
+            <Text className="text-xs text-muted">Gizlilik politikası</Text>
           </Pressable>
         </View>
       </Animated.View>

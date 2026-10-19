@@ -9,6 +9,7 @@
     "@google/genai": "^1.22.0",
     "@supabase/supabase-js": "^2.118.0",
     "cheerio": "^1.1.2",
+    "jszip": "^3.10.2",
     "kpss-atama-app": "file:.."
   },
   "devDependencies": {

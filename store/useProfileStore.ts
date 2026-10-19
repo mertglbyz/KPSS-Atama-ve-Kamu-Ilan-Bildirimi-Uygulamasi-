@@ -80,6 +80,7 @@ export const useProfileStore = create<ProfileState>()(
         if (educations.some((item, index) => item.level !== state.draft.educations[index]?.level)) {
           state.patch({ educations });
         }
+        if (!Array.isArray(state.draft.kpssScores)) state.patch({ kpssScores: [] });
         state.setHydrated(true);
       },
       partialize: (state) => ({ draft: state.draft, interactions: state.interactions, studied: state.studied }),

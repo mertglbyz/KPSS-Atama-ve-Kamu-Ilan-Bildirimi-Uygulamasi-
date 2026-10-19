@@ -1,7 +1,10 @@
 import './load-env';
+import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { parseAnnouncement } from './gemini';
 import { fingerprint, sameAnnouncement } from './identity';
+import { datesFromTitle } from './dates';
+import { noticeKind } from './notices';
 import { discoverIlanGov, discoverKamuilan, discoverKariyerKapisi, discoverYerelYonetimler, downloadPdf, enrichAd } from './sources';
 import type { DiscoveredAd, ParsedPosition } from './types';
 
@@ -24,6 +27,7 @@ type KnownAd = {
   source_url: string;
   source_name: string | null;
   application_end_date: string | null;
+  body_hash?: string | null;
 };
 
 async function noteAlternate(existingId: string, ad: DiscoveredAd) {
@@ -36,7 +40,7 @@ async function noteAlternate(existingId: string, ad: DiscoveredAd) {
   }).eq('id', existingId);
 }
 
-async function notify(positionId: string, kind: 'new_job' | 'deadline', body: string) {
+async function notify(positionId: string, kind: 'new_job' | 'deadline', body: string, title = kind === 'deadline' ? 'Son 48 saat' : 'Yeni uygun ilan', dedupe: string = kind) {
   const { data, error } = await supabase.rpc('users_to_notify_for_position', {
     p_position_id: positionId,
     p_kind: kind,
@@ -44,7 +48,7 @@ async function notify(positionId: string, kind: 'new_job' | 'deadline', body: st
   if (error || !data?.length) return;
   const messages = data.map((candidate: { expo_push_token: string }) => ({
     to: candidate.expo_push_token,
-    title: kind === 'deadline' ? 'Son 48 saat' : 'Yeni uygun ilan',
+    title,
     body,
     data: { positionId },
   }));
@@ -56,10 +60,10 @@ async function notify(positionId: string, kind: 'new_job' | 'deadline', body: st
   await supabase.from('notifications').upsert(
     data.map((candidate: { user_id: string }) => ({
       user_id: candidate.user_id,
-      title: kind === 'deadline' ? 'Son 48 saat' : 'Yeni uygun ilan',
+      title,
       body,
-      kind,
-      dedupe_key: `${kind}:${positionId}:${candidate.user_id}`,
+      kind: dedupe === kind ? kind : 'system',
+      dedupe_key: `${dedupe}:${positionId}:${candidate.user_id}`,
     })),
     { onConflict: 'user_id,dedupe_key', ignoreDuplicates: true },
   );
@@ -79,9 +83,10 @@ function isStale(value: string | null | undefined) {
   return !Number.isNaN(year) && year < new Date().getFullYear();
 }
 
-async function saveAd(ad: DiscoveredAd): Promise<string | undefined> {
-  const { data: existing } = await supabase.from('announcements').select('id, application_end_date').eq('source_url', ad.sourceUrl).maybeSingle();
-  if (existing && !isStale(existing.application_end_date)) return existing.id;
+async function saveAd(ad: DiscoveredAd, options: { hash: string; existingId?: string; localKind: 'active' | 'revised' | 'cancelled' }): Promise<string | undefined> {
+  const { data: existing } = options.existingId
+    ? await supabase.from('announcements').select('id, source_url').eq('id', options.existingId).maybeSingle()
+    : await supabase.from('announcements').select('id, source_url').eq('source_url', ad.sourceUrl).maybeSingle();
   if (!process.env.GEMINI_API_KEY) {
     notes.push('GEMINI_API_KEY yok, ayrıştırma atlandı.');
     return undefined;
@@ -89,31 +94,47 @@ async function saveAd(ad: DiscoveredAd): Promise<string | undefined> {
   const pdf = ad.pdfUrl ? await downloadPdf(ad.pdfUrl) : undefined;
   const parsed = await parseAnnouncement(`${ad.institutionName}\n${ad.title}\n${ad.text}`, pdf);
   const positions = parsed.positions ?? [];
+  const kind = options.localKind === 'cancelled' || parsed.notice_kind === 'cancelled'
+    ? 'cancelled'
+    : options.localKind === 'revised' || parsed.notice_kind === 'revised' || existing
+      ? 'revised'
+      : 'active';
+  if (kind === 'cancelled' && existing) {
+    const current = await supabase.from('job_positions').select('id, position_title').eq('announcement_id', existing.id);
+    for (const position of current.data ?? []) {
+      await notify(position.id, 'new_job', `${ad.institutionName}: ${position.position_title} ilanı iptal edildi.`, 'İlan iptal edildi', `cancel:${options.hash}`);
+    }
+    await supabase.from('announcements').update({ status: 'archived', listing_state: 'cancelled', body_hash: options.hash }).eq('id', existing.id);
+    return existing.id;
+  }
   const row = {
     institution_name: parsed.institution_name || ad.institutionName,
     title: ad.title,
     source_name: ad.sourceName,
-    source_url: ad.sourceUrl,
+    source_url: existing?.source_url || ad.sourceUrl,
     pdf_url: ad.pdfUrl ?? null,
-    application_start_date: parsed.application_start_date ? futureDate(parsed.application_start_date, 0) : null,
-    application_end_date: futureDate(parsed.application_end_date, 14),
-    status: positions.length ? 'published' : 'draft',
+    application_start_date: datesFromTitle(ad.title).start ?? (parsed.application_start_date ? futureDate(parsed.application_start_date, 0) : null),
+    application_end_date: datesFromTitle(ad.title).end ?? futureDate(parsed.application_end_date, 14),
+    status: kind === 'cancelled' ? 'archived' : positions.length ? 'published' : 'draft',
     content_fingerprint: fingerprint(parsed.institution_name || ad.institutionName, ad.title),
+    body_hash: options.hash,
+    listing_state: kind === 'cancelled' ? 'cancelled' : kind,
   };
   const { content_fingerprint: fingerprintValue, source_url: _sourceUrl, ...updateRow } = row;
   let created = existing
     ? await supabase.from('announcements').update({ ...updateRow, content_fingerprint: fingerprintValue }).eq('id', existing.id).select('id').single()
     : await supabase.from('announcements').insert(row).select('id').single();
-  if (created.error?.message.includes('content_fingerprint')) {
-    const { content_fingerprint: _ignored, ...withoutFingerprint } = row;
+  if (created.error && /content_fingerprint|body_hash|listing_state/.test(created.error.message)) {
+    notes.push('İlan durum sütunları henüz yok. Supabase SQL dosyasını çalıştır.');
+    const { content_fingerprint: _fingerprint, body_hash: _hash, listing_state: _state, ...plain } = row;
     created = existing
-      ? await supabase.from('announcements').update(updateRow).eq('id', existing.id).select('id').single()
-      : await supabase.from('announcements').insert(withoutFingerprint).select('id').single();
+      ? await supabase.from('announcements').update(plain).eq('id', existing.id).select('id').single()
+      : await supabase.from('announcements').insert(plain).select('id').single();
   }
   const { data: announcement, error } = created;
   if (existing && announcement) await supabase.from('job_positions').delete().eq('announcement_id', announcement.id);
   if (error || !announcement) throw error ?? new Error('ilan yazılamadı');
-  if (!positions.length || !announcement) return announcement?.id;
+  if (kind === 'cancelled' || !positions.length || !announcement) return announcement?.id;
   const rows = positions.map((position: ParsedPosition) => ({
     announcement_id: announcement.id,
     position_title: position.position_title,
@@ -131,6 +152,10 @@ async function saveAd(ad: DiscoveredAd): Promise<string | undefined> {
     allowed_genders: position.allowed_genders ?? ['Erkek', 'Kadın'],
     min_height_male: position.min_height_male ?? 0,
     min_height_female: position.min_height_female ?? 0,
+    max_height_male: position.max_height_male ?? 0,
+    max_height_female: position.max_height_female ?? 0,
+    min_weight: position.min_weight ?? 0,
+    max_weight: position.max_weight ?? 0,
     required_licenses: position.required_licenses ?? [],
     requires_security_card: position.requires_security_card ?? false,
     requires_disability: position.requires_disability ?? false,
@@ -138,10 +163,22 @@ async function saveAd(ad: DiscoveredAd): Promise<string | undefined> {
     required_certificates: position.required_certificates ?? [],
     raw_requirements_text: position.raw_requirements_text ?? null,
   }));
-  const { data: insertedPositions, error: positionError } = await supabase.from('job_positions').insert(rows).select('id, position_title');
-  if (positionError) throw positionError;
-  for (const position of insertedPositions ?? []) {
-    await notify(position.id, 'new_job', `${ad.institutionName}: ${position.position_title}`);
+  let positionWrite = await supabase.from('job_positions').insert(rows).select('id, position_title');
+  if (positionWrite.error && /min_weight|max_weight|max_height/.test(positionWrite.error.message)) {
+    const slim = rows.map(({ min_weight: _minWeight, max_weight: _maxWeight, max_height_male: _maxMale, max_height_female: _maxFemale, ...rest }) => rest);
+    positionWrite = await supabase.from('job_positions').insert(slim).select('id, position_title');
+    notes.push('Boy ve kilo sütunları henüz yok. Supabase SQL dosyasını çalıştır.');
+  }
+  if (positionWrite.error) throw positionWrite.error;
+  const updated = Boolean(existing);
+  for (const position of positionWrite.data ?? []) {
+    await notify(
+      position.id,
+      'new_job',
+      `${ad.institutionName}: ${position.position_title}`,
+      updated ? 'İlan güncellendi' : 'Yeni uygun ilan',
+      updated ? `revision:${options.hash}` : 'new_job',
+    );
   }
   counts[ad.sourceName] = (counts[ad.sourceName] ?? 0) + 1;
   return announcement.id;
@@ -180,41 +217,52 @@ async function main() {
         notes.push(`${name}: ${error instanceof Error ? error.message : 'hata'}`);
       }
     }
-    const known = await supabase.from('announcements').select('id, institution_name, title, source_url, source_name, application_end_date').limit(5000);
-    const catalog: KnownAd[] = known.data ?? [];
+    const known = await supabase.from('announcements').select('id, institution_name, title, source_url, source_name, application_end_date, body_hash').limit(5000);
+    const fallback = known.error?.message.includes('body_hash')
+      ? await supabase.from('announcements').select('id, institution_name, title, source_url, source_name, application_end_date').limit(5000)
+      : null;
+    if (fallback) notes.push('Tekrar ve düzeltme sütunu henüz yok. Supabase SQL dosyasını çalıştır.');
+    const catalog: KnownAd[] = (known.data ?? fallback?.data ?? []) as KnownAd[];
     let saved = 0;
     let deferred = 0;
     let duplicates = 0;
     for (const ad of discovered) {
-      const already = catalog.find((item) => item.source_url === ad.sourceUrl)
-        ?? catalog.find((item) => sameAnnouncement(
-          { institutionName: item.institution_name, title: item.title },
-          { institutionName: ad.institutionName, title: ad.title },
-        ));
-      const staleCopy = already?.source_url === ad.sourceUrl && isStale(already.application_end_date);
-      if (already && !staleCopy) {
-        if (already.source_url !== ad.sourceUrl) {
-          await noteAlternate(already.id, ad);
-          duplicates += 1;
-        }
-        continue;
-      }
-      if (saved >= maxNewPerRun) {
-        deferred += 1;
-        continue;
-      }
       try {
         const enriched = await enrichAd(ad);
-        const savedId = await saveAd(enriched);
+        const hash = createHash('sha256').update(`${enriched.title}\n${enriched.text}`).digest('hex');
+        const localKind = noticeKind(enriched.title, enriched.text);
+        const already = catalog.find((item) => item.source_url === enriched.sourceUrl)
+          ?? catalog.find((item) => sameAnnouncement(
+            { institutionName: item.institution_name, title: item.title },
+            { institutionName: enriched.institutionName, title: enriched.title },
+          ));
+        if (already && already.source_url !== enriched.sourceUrl && localKind === 'active') {
+          await noteAlternate(already.id, enriched);
+          duplicates += 1;
+          continue;
+        }
+        const unchanged = already?.body_hash === hash && !isStale(already?.application_end_date) && localKind === 'active';
+        if (unchanged) continue;
+        if (!already && saved >= maxNewPerRun) {
+          deferred += 1;
+          continue;
+        }
+        const savedId = await saveAd(enriched, { hash, existingId: already?.id, localKind });
         if (!savedId) continue;
-        catalog.push({
-          id: savedId,
-          institution_name: enriched.institutionName,
-          title: enriched.title,
-          source_url: enriched.sourceUrl,
-          source_name: enriched.sourceName,
-          application_end_date: new Date().toISOString(),
-        });
+        if (already) {
+          already.body_hash = hash;
+          already.application_end_date = new Date().toISOString();
+        } else {
+          catalog.push({
+            id: savedId,
+            institution_name: enriched.institutionName,
+            title: enriched.title,
+            source_url: enriched.sourceUrl,
+            source_name: enriched.sourceName,
+            application_end_date: new Date().toISOString(),
+            body_hash: hash,
+          });
+        }
         saved += 1;
       } catch (error) {
         const message = (error instanceof Error ? error.message : 'hata').slice(0, 180);

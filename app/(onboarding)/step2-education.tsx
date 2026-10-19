@@ -11,7 +11,7 @@ import { useProfileStore } from '@/store/useProfileStore';
 const LEVELS: { id: EducationLevel; title: string; caption: string }[] = [
   { id: 'Ortaöğretim', title: 'Ortaöğretim', caption: 'P94 · lise ve meslek lisesi' },
   { id: 'Önlisans', title: 'Önlisans', caption: 'P93 · meslek yüksekokulu' },
-  { id: 'Lisans', title: 'Lisans', caption: 'P3 · fakülte ve yüksekokul' },
+  { id: 'Lisans', title: 'Lisans', caption: 'P1, P2, P3 ve A grubu alan puanı' },
 ];
 
 export default function StepEducation() {

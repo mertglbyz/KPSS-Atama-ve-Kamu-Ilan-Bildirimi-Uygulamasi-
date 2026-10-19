@@ -32,7 +32,22 @@ export const CERTIFICATES = [
 export const KPSS_TYPES: Record<EducationLevel, string[]> = {
   Ortaöğretim: ['P94'],
   Önlisans: ['P93'],
-  Lisans: ['P3', 'P1', 'P2'],
+  Lisans: [
+    'P3',
+    'P2',
+    'P1',
+    'Hukuk',
+    'İktisat',
+    'Maliye',
+    'İşletme',
+    'Muhasebe',
+    'Kamu Yönetimi',
+    'Uluslararası İlişkiler',
+    'Çalışma Ekonomisi',
+    'İstatistik',
+    'Ekonometri',
+    'Finans',
+  ],
 };
 
 export const STUDY_TOPICS = [

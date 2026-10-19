@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
+import { CardActions, JobChips, JobNotice } from '@/components/JobFacts';
+import { openOfficialSource, sourceLabel } from '@/lib/source';
 import { Button, Card, Choice, Screen, Title } from '@/components/ui';
-import { fetchCards, fetchMatches } from '@/lib/data';
-import { formatDay } from '@/lib/format';
+import { fetchCards, fetchMatches, upsertInteraction } from '@/lib/data';
 import { useAppStore } from '@/store/useAppStore';
 import { useProfileStore } from '@/store/useProfileStore';
 
@@ -29,9 +30,11 @@ export default function JobsScreen() {
   const premium = useAppStore((state) => state.isPremium);
   const draft = useProfileStore((state) => state.draft);
   const interactions = useProfileStore((state) => state.interactions);
+  const setInteraction = useProfileStore((state) => state.setInteraction);
   const cards = useQuery({ queryKey: ['cards'], queryFn: () => fetchCards('active') });
   const archive = useQuery({ queryKey: ['archive'], queryFn: () => fetchCards('archived'), enabled: scope === 'archive' });
   const matches = useQuery({ queryKey: ['matches', userId, draft, premium], enabled: Boolean(userId), queryFn: () => fetchMatches(userId!, draft, premium) });
+  const matchIds = useMemo(() => new Set((matches.data ?? []).map((job) => job.id)), [matches.data]);
 
   const rows = useMemo(() => {
     const needle = query.toLocaleLowerCase('tr-TR');
@@ -43,7 +46,15 @@ export default function JobsScreen() {
           id: job.id,
           title: job.positionTitle,
           institution: job.institutionName,
-          meta: `${job.quota} kontenjan · ${formatDay(job.applicationEndDate)}`,
+          end: job.applicationEndDate,
+          start: job.applicationStartDate,
+          education: job.educationLevel,
+          quota: job.quota,
+          requiresKpss: job.requiresKpss,
+          kpssType: job.kpssType,
+          minKpssScore: job.minKpssScore,
+          sourceUrl: job.sourceUrl,
+          sourceName: job.sourceName,
         }));
     }
     const source = scope === 'archive' ? archive.data ?? [] : cards.data ?? [];
@@ -60,7 +71,15 @@ export default function JobsScreen() {
         id: card.positionId,
         title: card.positionTitle,
         institution: card.institutionName,
-        meta: `${card.educationLevel} · ${card.cities.slice(0, 2).join(', ') || 'Tüm Türkiye'} · ${formatDay(card.applicationEndDate)}`,
+        end: card.applicationEndDate,
+        start: card.applicationStartDate,
+        education: card.educationLevel,
+        quota: card.quota,
+        requiresKpss: card.requiresKpss,
+        kpssType: card.kpssType,
+        minKpssScore: card.minKpssScore,
+        sourceUrl: card.sourceUrl,
+        sourceName: card.sourceName,
       }));
   }, [archive.data, cards.data, interactions, matches.data, query, scope]);
 
@@ -86,13 +105,42 @@ export default function JobsScreen() {
       ) : rows.length === 0 ? (
         <Text className="mt-6 text-muted">{cards.isLoading || archive.isLoading ? 'İlanlar yükleniyor.' : 'Bu görünümde ilan yok.'}</Text>
       ) : (
-        rows.map((row) => (
-          <Pressable key={row.id} onPress={() => router.push(`/position/${row.id}`)} className="mb-3 rounded-3xl border border-line bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-            <Text className="text-xs font-semibold text-brand-700">{row.institution}</Text>
-            <Text className="mt-1 text-lg font-bold text-ink dark:text-white">{row.title}</Text>
-            <Text className="mt-1 text-sm text-muted">{row.meta}</Text>
-          </Pressable>
-        ))
+        rows.map((row) => {
+          const interaction = interactions[row.id];
+          function remember(partial: { is_saved?: boolean; is_hidden?: boolean }) {
+            setInteraction(row.id, {
+              isSaved: partial.is_saved ?? interaction?.isSaved ?? false,
+              isHidden: partial.is_hidden ?? interaction?.isHidden ?? false,
+              applicationStatus: interaction?.applicationStatus ?? 'none',
+            });
+            if (userId) void upsertInteraction(userId, row.id, partial);
+          }
+          return (
+            <View key={row.id} className="mb-3 rounded-3xl border border-line bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+              <View className="flex-row items-start justify-between gap-3">
+                <View className="flex-1">
+                  <Text className="text-xs font-semibold text-brand-700">{row.institution}</Text>
+                  <Text className="mt-1 text-lg font-bold text-ink dark:text-white">{row.title}</Text>
+                </View>
+                {matchIds.has(row.id) ? <Text className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">Uygun</Text> : null}
+              </View>
+              <JobNotice start={row.start} end={row.end} />
+              <JobChips end={row.end} education={row.education} quota={row.quota} requiresKpss={row.requiresKpss} kpssType={row.kpssType} minKpssScore={row.minKpssScore} />
+              <CardActions
+                saved={Boolean(interaction?.isSaved)}
+                hidden={Boolean(interaction?.isHidden)}
+                onSave={() => remember({ is_saved: !interaction?.isSaved })}
+                onHide={() => remember({ is_hidden: !interaction?.isHidden })}
+                onOpen={() => router.push(`/position/${row.id}`)}
+              />
+              {row.sourceUrl ? (
+                <Pressable accessibilityRole="link" onPress={() => void openOfficialSource(row.sourceUrl)} className="mt-3">
+                  <Text className="text-sm font-semibold text-brand-700">{sourceLabel(row.sourceName)} sitesinde aç</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          );
+        })
       )}
     </Screen>
   );
