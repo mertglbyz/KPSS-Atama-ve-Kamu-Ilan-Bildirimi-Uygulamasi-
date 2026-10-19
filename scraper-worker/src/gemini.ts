@@ -17,7 +17,7 @@ const responseSchema = {
           position_title: { type: Type.STRING },
           quota: { type: Type.INTEGER },
           cities: { type: Type.ARRAY, items: { type: Type.STRING } },
-          education_level: { type: Type.STRING, enum: ['Lise', 'Önlisans', 'Lisans'] },
+          education_level: { type: Type.STRING, enum: ['Ortaöğretim', 'Önlisans', 'Lisans'] },
           is_general_degree: { type: Type.BOOLEAN },
           allowed_departments: { type: Type.ARRAY, items: { type: Type.STRING } },
           requires_kpss: { type: Type.BOOLEAN },
@@ -46,7 +46,7 @@ export async function parseAnnouncement(text: string, pdf?: Buffer): Promise<Par
       : []),
     `Aşağıdaki kamu personel alımı ilan metnini ve varsa ekteki PDF kılavuzunu analiz et.
 İlandaki her kadro satırını ayrı bir JSON öğesi olarak çıkar.
-Bölüm adlarını standartlaştır. "Herhangi bir lisans/önlisans/lise" ifadesinde is_general_degree true olsun.
+Bölüm adlarını standartlaştır. Lise mezuniyetini education_level olarak Ortaöğretim yaz. "Herhangi bir lisans/önlisans/ortaöğretim" ifadesinde is_general_degree true olsun.
 Tarihleri ISO 8601 yaz. Ek metin: ${text.slice(0, 12000)}`,
   ];
   const response = await ai.models.generateContent({

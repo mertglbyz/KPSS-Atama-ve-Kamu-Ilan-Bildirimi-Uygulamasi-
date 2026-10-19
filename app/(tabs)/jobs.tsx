@@ -83,7 +83,7 @@ export default function JobsScreen() {
         <Text className="mt-6 text-muted">{cards.isLoading ? 'İlanlar yükleniyor.' : 'Bu görünümde ilan yok.'}</Text>
       ) : (
         rows.map((row) => (
-          <Pressable key={row.id} onPress={() => router.push(`/position/${row.id}`)} className="mb-3 rounded-3xl bg-white p-4 dark:bg-slate-900">
+          <Pressable key={row.id} onPress={() => router.push(`/position/${row.id}`)} className="mb-3 rounded-3xl border border-line bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
             <Text className="text-xs font-semibold text-brand-700">{row.institution}</Text>
             <Text className="mt-1 text-lg font-bold text-ink dark:text-white">{row.title}</Text>
             <Text className="mt-1 text-sm text-muted">{row.meta}</Text>

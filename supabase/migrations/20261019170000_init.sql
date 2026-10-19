@@ -15,7 +15,7 @@ create table if not exists public.profiles (
   weight integer,
   gender text check (gender in ('Erkek', 'Kadın')),
   city text,
-  primary_education_level text check (primary_education_level in ('Lise', 'Önlisans', 'Lisans')),
+  primary_education_level text check (primary_education_level in ('Lise', 'Ortaöğretim', 'Önlisans', 'Lisans')),
   departments text[] default '{}',
   educations jsonb default '[]'::jsonb,
   has_kpss boolean default false,
@@ -62,7 +62,7 @@ create table if not exists public.job_positions (
   position_title text not null,
   quota integer default 1,
   cities text[] default '{}',
-  education_level text check (education_level in ('Lise', 'Önlisans', 'Lisans')) not null,
+  education_level text check (education_level in ('Lise', 'Ortaöğretim', 'Önlisans', 'Lisans')) not null,
   is_general_degree boolean default false,
   allowed_departments text[] default '{}',
   requires_kpss boolean default true,
@@ -146,6 +146,15 @@ create index if not exists profiles_departments_gin on public.profiles using gin
 create index if not exists announcements_status_end_idx on public.announcements (status, application_end_date);
 create index if not exists job_positions_announcement_idx on public.job_positions (announcement_id);
 
+create or replace function private.same_education_level(a text, b text)
+returns boolean
+language sql
+immutable
+as $$
+  select case when a in ('Lise', 'Ortaöğretim') then 'Ortaöğretim' else a end
+       = case when b in ('Lise', 'Ortaöğretim') then 'Ortaöğretim' else b end;
+$$;
+
 -- Eşleştirme kuralları tek yerde durur.
 create or replace function private.profile_matches_position(
   u public.profiles,
@@ -160,7 +169,7 @@ as $$
     and a.application_end_date >= now()
     and (
       (
-        u.primary_education_level = jp.education_level
+        private.same_education_level(u.primary_education_level, jp.education_level)
         and (
           jp.is_general_degree
           or coalesce(jp.allowed_departments, '{}') && coalesce(u.departments, '{}')
@@ -169,7 +178,7 @@ as $$
       or exists (
         select 1
         from jsonb_array_elements(coalesce(u.educations, '[]'::jsonb)) elem
-        where elem->>'level' = jp.education_level
+        where private.same_education_level(elem->>'level', jp.education_level)
           and (
             jp.is_general_degree
             or (elem->>'department') = any(coalesce(jp.allowed_departments, '{}'))

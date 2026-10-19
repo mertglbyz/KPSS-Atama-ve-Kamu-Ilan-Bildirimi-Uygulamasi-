@@ -21,14 +21,18 @@ export function StepFrame({
   const router = useRouter();
   return (
     <Screen>
-      <Text className="mt-2 text-sm font-semibold text-brand-700">Adım {step}/5</Text>
-      <View className="my-3 h-2 overflow-hidden rounded-full bg-brand-50">
-        <View className="h-2 rounded-full bg-brand-700" style={{ width: `${(step / 5) * 100}%` }} />
+      <View className="mt-2 flex-row items-center justify-between">
+        <Text className="text-xs font-semibold tracking-[2px] text-brand-700">ADIM {step} / 5</Text>
+        <View className="flex-row gap-1.5">
+          {[1, 2, 3, 4, 5].map((item) => (
+            <View key={item} className={`h-1.5 w-6 rounded-full ${item <= step ? 'bg-brand-700' : 'bg-line'}`} />
+          ))}
+        </View>
       </View>
-      <Text className="text-2xl font-bold text-ink dark:text-white">{title}</Text>
-      <Text className="mb-5 mt-1 text-sm leading-5 text-muted">{subtitle}</Text>
+      <Text className="mt-4 text-3xl font-bold text-ink dark:text-white">{title}</Text>
+      <Text className="mb-5 mt-2 text-sm leading-6 text-muted">{subtitle}</Text>
       {children}
-      <View className="mt-4 gap-3">
+      <View className="mt-5 gap-2">
         <Button label={nextLabel} onPress={onNext} />
         {step > 1 ? <Button label="Geri" variant="ghost" onPress={() => router.back()} /> : null}
       </View>

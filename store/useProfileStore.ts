@@ -72,7 +72,16 @@ export const useProfileStore = create<ProfileState>()(
     {
       name: 'kpss-profile',
       storage: createJSONStorage(() => AsyncStorage),
-      onRehydrateStorage: () => (state) => state?.setHydrated(true),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        const educations = state.draft.educations.map((item) =>
+          (item.level as string) === 'Lise' ? { ...item, level: 'Ortaöğretim' as const } : item,
+        );
+        if (educations.some((item, index) => item.level !== state.draft.educations[index]?.level)) {
+          state.patch({ educations });
+        }
+        state.setHydrated(true);
+      },
       partialize: (state) => ({ draft: state.draft, interactions: state.interactions, studied: state.studied }),
     },
   ),

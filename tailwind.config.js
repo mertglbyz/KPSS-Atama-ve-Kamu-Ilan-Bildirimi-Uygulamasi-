@@ -6,15 +6,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        canvas: '#F4F7FB',
+        canvas: '#F8FAFC',
+        night: '#090D16',
         ink: '#0F172A',
         muted: '#64748B',
         line: '#E2E8F0',
+        mint: '#10B981',
         brand: {
-          50: '#E8F0FE',
-          100: '#D5E3FB',
-          700: '#0B3A82',
-          800: '#082E68',
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          700: '#2563EB',
+          800: '#1D4ED8',
         },
       },
     },

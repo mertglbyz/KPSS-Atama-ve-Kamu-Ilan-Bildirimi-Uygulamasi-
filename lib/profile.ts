@@ -1,7 +1,13 @@
 import type { EducationLevel, MatchProfile, ProfileDraft } from '@/types/domain';
 import { parseScore } from '@/lib/format';
 
-const LEVEL_RANK: Record<EducationLevel, number> = { Lise: 1, Önlisans: 2, Lisans: 3 };
+const LEVEL_RANK: Record<EducationLevel, number> = { Ortaöğretim: 1, Önlisans: 2, Lisans: 3 };
+
+export function normalizeLevel(value: unknown): EducationLevel {
+  if (value === 'Önlisans') return 'Önlisans';
+  if (value === 'Lisans') return 'Lisans';
+  return 'Ortaöğretim';
+}
 
 export const emptyDraft = (): ProfileDraft => ({
   nickname: '',
@@ -99,7 +105,7 @@ export function fromProfileRow(row: Record<string, unknown>): ProfileDraft {
     .map((item) => {
       const entry = item as { level?: EducationLevel; department?: string };
       if (!entry.level || !entry.department) return null;
-      return { level: entry.level, department: entry.department };
+      return { level: normalizeLevel(entry.level), department: entry.department };
     })
     .filter((item): item is { level: EducationLevel; department: string } => item != null);
 

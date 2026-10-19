@@ -6,9 +6,14 @@ export type MatchResult = {
   gaps: string[];
 };
 
+function sameLevel(left: string, right: string): boolean {
+  const normalize = (value: string) => (value === 'Lise' ? 'Ortaöğretim' : value);
+  return normalize(left) === normalize(right);
+}
+
 function educationMatches(profile: MatchProfile, job: JobPosition): boolean {
   return profile.educations.some((education) => {
-    if (education.level !== job.educationLevel) return false;
+    if (!sameLevel(education.level, job.educationLevel)) return false;
     if (job.isGeneralDegree) return true;
     return job.allowedDepartments.includes(education.department);
   });

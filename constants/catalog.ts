@@ -1,5 +1,7 @@
 import type { EducationLevel } from '@/types/domain';
 
+export { DEPARTMENTS } from '@/constants/departments';
+
 export const CITIES = [
   'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya', 'Artvin', 'Aydın', 'Balıkesir',
   'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum', 'Denizli',
@@ -10,61 +12,6 @@ export const CITIES = [
   'Trabzon', 'Tunceli', 'Şanlıurfa', 'Uşak', 'Van', 'Yozgat', 'Zonguldak', 'Aksaray', 'Bayburt', 'Karaman',
   'Kırıkkale', 'Batman', 'Şırnak', 'Bartın', 'Ardahan', 'Iğdır', 'Yalova', 'Karabük', 'Kilis', 'Osmaniye', 'Düzce',
 ] as const;
-
-export const DEPARTMENTS: Record<EducationLevel, string[]> = {
-  Lise: ['Genel Lise', 'Anadolu Lisesi', 'Meslek Lisesi', 'İmam Hatip Lisesi', 'Teknik Lise'],
-  Önlisans: [
-    'Bilgisayar Programcılığı',
-    'Büro Yönetimi',
-    'Muhasebe',
-    'İşletme Yönetimi',
-    'Elektrik',
-    'Elektronik Teknolojisi',
-    'Makine',
-    'İnşaat Teknolojisi',
-    'Grafik Tasarım',
-    'Adalet',
-    'İlk ve Acil Yardım',
-    'Çocuk Gelişimi',
-    'Aşçılık',
-    'Lojistik',
-    'Sağlık Kurumları İşletmeciliği',
-  ],
-  Lisans: [
-    'Yazılım Mühendisliği',
-    'Bilgisayar Mühendisliği',
-    'Elektrik-Elektronik Mühendisliği',
-    'Endüstri Mühendisliği',
-    'Makine Mühendisliği',
-    'İnşaat Mühendisliği',
-    'Harita Mühendisliği',
-    'Çevre Mühendisliği',
-    'İşletme',
-    'İktisat',
-    'Kamu Yönetimi',
-    'Maliye',
-    'Hukuk',
-    'Siyaset Bilimi ve Kamu Yönetimi',
-    'Uluslararası İlişkiler',
-    'Psikoloji',
-    'Sosyoloji',
-    'Türk Dili ve Edebiyatı',
-    'Tarih',
-    'Matematik',
-    'Fizik',
-    'Kimya',
-    'Biyoloji',
-    'Hemşirelik',
-    'Ebelik',
-    'Öğretmenlik',
-    'Sınıf Öğretmenliği',
-    'İlahiyat',
-    'Mimarlık',
-    'Şehir ve Bölge Planlama',
-    'Ziraat Mühendisliği',
-    'Veterinerlik',
-  ],
-};
 
 export const LICENSE_CLASSES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'M', 'T'] as const;
 
@@ -83,7 +30,7 @@ export const CERTIFICATES = [
 ] as const;
 
 export const KPSS_TYPES: Record<EducationLevel, string[]> = {
-  Lise: ['P94'],
+  Ortaöğretim: ['P94'],
   Önlisans: ['P93'],
   Lisans: ['P3', 'P1', 'P2'],
 };

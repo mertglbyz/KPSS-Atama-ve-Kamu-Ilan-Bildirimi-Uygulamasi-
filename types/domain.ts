@@ -1,4 +1,4 @@
-export type EducationLevel = 'Lise' | 'Önlisans' | 'Lisans';
+export type EducationLevel = 'Ortaöğretim' | 'Önlisans' | 'Lisans';
 export type Gender = 'Erkek' | 'Kadın';
 export type SecurityCardType = 'Yok' | 'Silahsız' | 'Silahlı';
 export type SubscriptionPlan = 'free' | 'monthly' | 'quarterly' | 'yearly';

@@ -2,6 +2,7 @@ import { DEMO_BASE_SCORES, DEMO_COURSES, DEMO_JOBS, DEMO_MESSAGES } from '@/lib/
 import { careerTips, matchedPositions, summarize } from '@/lib/match';
 import { fromProfileRow, toMatchProfile, toProfileUpdate } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
+import { useAppStore } from '@/store/useAppStore';
 import type {
   AppNotification,
   BaseScore,
@@ -76,13 +77,13 @@ function mapCard(row: Record<string, unknown>): PublicJobCard {
 }
 
 export async function saveProfile(userId: string, draft: ProfileDraft): Promise<void> {
-  if (!supabase) return;
+  if (!supabase || useAppStore.getState().mode !== 'live') return;
   const { error } = await supabase.from('profiles').update(toProfileUpdate(draft)).eq('id', userId);
   if (error) throw error;
 }
 
 export async function loadProfile(userId: string): Promise<{ draft: ProfileDraft; isPremium: boolean; plan: 'free' | 'monthly' | 'quarterly' | 'yearly' } | null> {
-  if (!supabase) return null;
+  if (!supabase || useAppStore.getState().mode !== 'live') return null;
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
   if (error) throw error;
   if (!data) return null;
@@ -95,7 +96,7 @@ export async function loadProfile(userId: string): Promise<{ draft: ProfileDraft
 }
 
 export async function fetchSummary(userId: string, draft: ProfileDraft): Promise<MatchSummary> {
-  if (!supabase) return summarize(matchedPositions(toMatchProfile(draft), DEMO_JOBS), new Date().toISOString());
+  if (!supabase || useAppStore.getState().mode !== 'live') return summarize(matchedPositions(toMatchProfile(draft), DEMO_JOBS), new Date().toISOString());
   const { data, error } = await supabase.rpc('get_match_summary', { p_user_id: userId });
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
@@ -109,7 +110,7 @@ export async function fetchSummary(userId: string, draft: ProfileDraft): Promise
 }
 
 export async function fetchMatches(userId: string, draft: ProfileDraft, premium: boolean): Promise<JobPosition[]> {
-  if (!supabase) {
+  if (!supabase || useAppStore.getState().mode !== 'live') {
     const matches = matchedPositions(toMatchProfile(draft), DEMO_JOBS);
     return premium ? matches : [];
   }
@@ -119,7 +120,7 @@ export async function fetchMatches(userId: string, draft: ProfileDraft, premium:
 }
 
 export async function fetchCards(scope: 'active' | 'archived'): Promise<PublicJobCard[]> {
-  if (!supabase) {
+  if (!supabase || useAppStore.getState().mode !== 'live') {
     return DEMO_JOBS.filter((job) => (scope === 'archived' ? job.status === 'archived' : job.status === 'published')).map((job) => ({
       positionId: job.id,
       announcementId: job.announcementId,
@@ -143,7 +144,7 @@ export async function fetchCards(scope: 'active' | 'archived'): Promise<PublicJo
 }
 
 export async function fetchPosition(userId: string, positionId: string, draft: ProfileDraft, premium: boolean): Promise<JobPosition | null> {
-  if (!supabase) {
+  if (!supabase || useAppStore.getState().mode !== 'live') {
     const job = DEMO_JOBS.find((item) => item.id === positionId) ?? null;
     if (!job || premium) return job;
     return {
@@ -163,7 +164,7 @@ export async function fetchPosition(userId: string, positionId: string, draft: P
 
 export async function fetchRank(userId: string, draft: ProfileDraft, premium: boolean): Promise<CompetitorRank> {
   const score = toMatchProfile(draft).kpssScore;
-  if (!supabase) {
+  if (!supabase || useAppStore.getState().mode !== 'live') {
     const cohort = [92, 88, 86, 84, 81, 79, 76, 74, 71, 68, 64, score].filter((item) => item > 0).sort((a, b) => b - a);
     const rank = cohort.findIndex((item) => item === score) + 1;
     return { totalCandidates: cohort.length, userRank: premium ? rank || null : null, userScore: score, unlocked: premium };
@@ -189,14 +190,14 @@ export async function fetchDistribution(userId: string, department: string, prem
     { label: '90+', count: 2 },
   ];
   if (!premium) return [];
-  if (!supabase) return empty;
+  if (!supabase || useAppStore.getState().mode !== 'live') return empty;
   const { data, error } = await supabase.rpc('get_score_distribution', { p_user_id: userId, p_department: department });
   if (error) throw error;
   return (data ?? []).map((row: { label: string; count: number }) => ({ label: row.label, count: asNumber(row.count) }));
 }
 
 export async function fetchBaseScores(userId: string, premium: boolean): Promise<BaseScore[]> {
-  if (!supabase) return premium ? DEMO_BASE_SCORES : DEMO_BASE_SCORES.slice(0, 3);
+  if (!supabase || useAppStore.getState().mode !== 'live') return premium ? DEMO_BASE_SCORES : DEMO_BASE_SCORES.slice(0, 3);
   const { data, error } = await supabase.rpc('list_base_scores', { p_user_id: userId });
   if (error) throw error;
   return (data ?? []).map((row: Record<string, unknown>) => ({
@@ -212,7 +213,7 @@ export async function fetchBaseScores(userId: string, premium: boolean): Promise
 }
 
 export async function fetchCourses(city: string): Promise<LocalCourse[]> {
-  if (!supabase) return DEMO_COURSES.filter((course) => !city || course.city === city);
+  if (!supabase || useAppStore.getState().mode !== 'live') return DEMO_COURSES.filter((course) => !city || course.city === city);
   const { data, error } = await supabase.rpc('list_courses', { p_city: city });
   if (error) throw error;
   return (data ?? []).map((row: Record<string, unknown>) => ({
@@ -225,7 +226,7 @@ export async function fetchCourses(city: string): Promise<LocalCourse[]> {
 }
 
 export async function fetchNotifications(userId: string): Promise<AppNotification[]> {
-  if (!supabase) {
+  if (!supabase || useAppStore.getState().mode !== 'live') {
     return [
       {
         id: 'n1',
@@ -250,19 +251,19 @@ export async function fetchNotifications(userId: string): Promise<AppNotificatio
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
-  if (!supabase) return;
+  if (!supabase || useAppStore.getState().mode !== 'live') return;
   await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id);
 }
 
 export async function fetchMessages(userId: string): Promise<SupportMessage[]> {
-  if (!supabase) return DEMO_MESSAGES;
+  if (!supabase || useAppStore.getState().mode !== 'live') return DEMO_MESSAGES;
   const { data, error } = await supabase.from('support_messages').select('*').eq('user_id', userId).order('created_at', { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => ({ id: row.id, body: row.body, sender: row.sender, createdAt: row.created_at }));
 }
 
 export async function sendMessage(userId: string, body: string): Promise<void> {
-  if (!supabase) return;
+  if (!supabase || useAppStore.getState().mode !== 'live') return;
   const { error } = await supabase.from('support_messages').insert({ user_id: userId, body, sender: 'user' });
   if (error) throw error;
 }
@@ -281,7 +282,7 @@ export function localTips(draft: ProfileDraft) {
 }
 
 export async function deleteAccount(): Promise<void> {
-  if (!supabase) return;
+  if (!supabase || useAppStore.getState().mode !== 'live') return;
   const { error } = await supabase.functions.invoke('delete-account');
   if (error) throw error;
 }

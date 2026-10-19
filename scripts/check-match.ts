@@ -56,7 +56,7 @@ const job = (patch: Partial<JobPosition>): JobPosition => ({
 
 const matches = matchedPositions(profile, [
   job({}),
-  job({ id: '2', educationLevel: 'Lise', kpssType: 'P94' }),
+  job({ id: '2', educationLevel: 'Ortaöğretim', kpssType: 'P94' }),
   job({ id: '3', requiredLicenses: ['D'] }),
   job({ id: '4', requiresSecurityCard: true }),
 ]);

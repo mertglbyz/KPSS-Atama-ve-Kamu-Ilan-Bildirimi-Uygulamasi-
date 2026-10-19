@@ -11,7 +11,7 @@ export type ParsedPosition = {
   position_title: string;
   quota?: number;
   cities?: string[];
-  education_level: 'Lise' | 'Önlisans' | 'Lisans';
+  education_level: 'Ortaöğretim' | 'Önlisans' | 'Lisans';
   is_general_degree: boolean;
   allowed_departments?: string[];
   requires_kpss?: boolean;

@@ -6,9 +6,15 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#0B3A82',
+        tabBarActiveTintColor: '#2563EB',
         tabBarInactiveTintColor: '#94A3B8',
-        tabBarStyle: { height: 64, paddingTop: 6, paddingBottom: 8 },
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E2E8F0',
+          height: 68,
+          paddingTop: 8,
+          paddingBottom: 10,
+        },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
@@ -16,7 +22,7 @@ export default function TabLayout() {
       <Tabs.Screen name="jobs" options={{ title: 'İlanlar', tabBarIcon: ({ color, size }) => <Briefcase color={color} size={size} /> }} />
       <Tabs.Screen name="notifications" options={{ title: 'Bildirim', tabBarIcon: ({ color, size }) => <Bell color={color} size={size} /> }} />
       <Tabs.Screen name="profile" options={{ title: 'Profil', tabBarIcon: ({ color, size }) => <UserRound color={color} size={size} /> }} />
-      <Tabs.Screen name="account" options={{ title: 'Hesap', tabBarIcon: ({ color, size }) => <Settings color={color} size={size} /> }} />
+      <Tabs.Screen name="account" options={{ title: 'Ayarlar', tabBarIcon: ({ color, size }) => <Settings color={color} size={size} /> }} />
     </Tabs>
   );
 }

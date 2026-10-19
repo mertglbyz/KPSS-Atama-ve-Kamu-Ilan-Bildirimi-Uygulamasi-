@@ -23,38 +23,47 @@ export function SelectField({
 
   return (
     <View className="mb-3">
-      <Text className="mb-1 text-sm font-medium text-ink dark:text-slate-200">{label}</Text>
-      <Pressable onPress={() => setOpen(true)} className="rounded-2xl border border-line bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-        <Text className={value ? 'text-ink dark:text-white' : 'text-slate-400'}>{value || placeholder}</Text>
+      <View className="mb-1.5 flex-row items-center justify-between">
+        <Text className="text-sm font-semibold text-ink dark:text-slate-200">{label}</Text>
+        <Text className="text-xs text-muted">{options.length} kayıt</Text>
+      </View>
+      <Pressable accessibilityRole="button" onPress={() => setOpen(true)} className="rounded-2xl border border-line bg-white px-4 py-3.5 dark:border-slate-700 dark:bg-slate-900">
+        <Text className={value ? 'text-base text-ink dark:text-white' : 'text-base text-slate-400'}>{value || placeholder}</Text>
       </Pressable>
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
         <View className="flex-1 bg-canvas px-5 pt-14 dark:bg-slate-950">
-          <Text className="mb-3 text-xl font-bold text-ink dark:text-white">{label}</Text>
+          <Text className="text-xs font-semibold tracking-[2px] text-brand-700">LİSTE</Text>
+          <Text className="mb-1 text-2xl font-bold text-ink dark:text-white">{label}</Text>
+          <Text className="mb-3 text-sm text-muted">{filtered.length} sonuç</Text>
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Ara"
-            placeholderTextColor="#94A3B8"
-            className="mb-3 rounded-2xl border border-line bg-white px-4 py-3 text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            placeholder="Bölüm veya alan ara"
+            placeholderTextColor="#A39888"
+            className="mb-3 rounded-2xl border border-line bg-white px-4 py-3.5 text-base text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           />
           <FlatList
             data={filtered}
             keyExtractor={(item) => item}
             keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() => {
-                  onChange(item);
-                  setOpen(false);
-                  setQuery('');
-                }}
-                className="border-b border-line py-3 dark:border-slate-800"
-              >
-                <Text className="text-base text-ink dark:text-slate-100">{item}</Text>
-              </Pressable>
-            )}
+            renderItem={({ item }) => {
+              const selected = item === value;
+              return (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    onChange(item);
+                    setOpen(false);
+                    setQuery('');
+                  }}
+                  className={`mb-2 rounded-2xl px-4 py-3 ${selected ? 'bg-brand-700' : 'bg-white dark:bg-slate-900'}`}
+                >
+                  <Text className={`text-base ${selected ? 'font-semibold text-white' : 'text-ink dark:text-slate-100'}`}>{item}</Text>
+                </Pressable>
+              );
+            }}
           />
-          <Pressable onPress={() => setOpen(false)} className="my-4 items-center py-3">
+          <Pressable accessibilityRole="button" onPress={() => setOpen(false)} className="my-3 items-center py-3">
             <Text className="font-semibold text-brand-700">Kapat</Text>
           </Pressable>
         </View>
