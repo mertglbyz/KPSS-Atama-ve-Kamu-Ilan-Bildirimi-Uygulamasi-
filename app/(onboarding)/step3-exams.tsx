@@ -47,10 +47,10 @@ export default function StepExams() {
           <Choice options={types} value={draft.kpssType} onChange={(kpssType) => patch({ kpssType })} />
           <Field label="KPSS puanı" value={draft.kpssScore} onChangeText={(kpssScore) => patch({ kpssScore })} placeholder="81,1288" keyboardType="decimal-pad" />
           <Text className="mb-2 text-sm font-medium text-ink dark:text-slate-200">Varsa ikinci puanın</Text>
-          <Text className="mb-2 text-xs leading-5 text-muted">A grubu adayları Hukuk, İktisat, Maliye gibi alan puanını da ekleyebilir. İlan o puanı istiyorsa o puanla eşleşir.</Text>
+          <Text className="mb-2 text-xs leading-5 text-muted dark:text-slate-300">A grubu adayları Hukuk, İktisat, Maliye gibi alan puanını da ekleyebilir. İlan o puanı istiyorsa o puanla eşleşir.</Text>
           {(draft.kpssScores ?? []).map((item) => (
             <Pressable key={`${item.type}-${item.score}`} onPress={() => patch({ kpssScores: (draft.kpssScores ?? []).filter((score) => score !== item) })}>
-              <Text className="mb-2 text-sm font-semibold text-brand-700">{item.type}: {item.score} · kaldırmak için dokun</Text>
+              <Text className="mb-2 text-sm font-semibold text-brand-700 dark:text-brand-100">{item.type}: {item.score} · kaldırmak için dokun</Text>
             </Pressable>
           ))}
           <Choice options={types} value={extraType} onChange={setExtraType} />
@@ -64,7 +64,7 @@ export default function StepExams() {
               setError(null);
             }}
           >
-            <Text className="mb-3 text-sm font-semibold text-brand-700">Ek puanı kaydet</Text>
+            <Text className="mb-3 text-sm font-semibold text-brand-700 dark:text-brand-100">Ek puanı kaydet</Text>
           </Pressable>
         </>
       ) : null}

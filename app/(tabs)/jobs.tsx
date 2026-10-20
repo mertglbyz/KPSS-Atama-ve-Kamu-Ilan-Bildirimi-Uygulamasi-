@@ -55,6 +55,7 @@ export default function JobsScreen() {
           minKpssScore: job.minKpssScore,
           sourceUrl: job.sourceUrl,
           sourceName: job.sourceName,
+          announcement: job.announcementTitle,
         }));
     }
     const source = scope === 'archive' ? archive.data ?? [] : cards.data ?? [];
@@ -80,12 +81,13 @@ export default function JobsScreen() {
         minKpssScore: card.minKpssScore,
         sourceUrl: card.sourceUrl,
         sourceName: card.sourceName,
+        announcement: card.announcementTitle,
       }));
   }, [archive.data, cards.data, interactions, matches.data, query, scope]);
 
   return (
     <Screen>
-      <Title subtitle="Herkese açık ilan kartları ve, Pro ise, profiline uyan kadrolar.">İlanlar</Title>
+      <Title subtitle="Herkese açık ilan kartları. Pro abonelikte profiline uyan kadrolar da açılır.">İlanlar</Title>
       <TextInput
         value={query}
         onChangeText={setQuery}
@@ -97,13 +99,13 @@ export default function JobsScreen() {
       {scope === 'matches' && !premium ? (
         <Card>
           <Text className="text-lg font-semibold text-ink dark:text-white">Kişiye özel kadrolar kilitli</Text>
-          <Text className="mt-2 text-sm leading-5 text-muted">Eşleşme sayısı ana sayfada görünür. Unvan, şart ve başvuru ayrıntısı Pro abonelikle açılır.</Text>
+          <Text className="mt-2 text-sm leading-5 text-muted dark:text-slate-300">Eşleşme sayısı ana sayfada görünür. Unvan, şart ve başvuru ayrıntısı Pro abonelikle açılır.</Text>
           <View className="mt-4">
             <Button label="Pro'ya geç" onPress={() => router.push('/paywall')} />
           </View>
         </Card>
       ) : rows.length === 0 ? (
-        <Text className="mt-6 text-muted">{cards.isLoading || archive.isLoading ? 'İlanlar yükleniyor.' : 'Bu görünümde ilan yok.'}</Text>
+        <Text className="mt-6 text-muted dark:text-slate-300">{cards.isLoading || archive.isLoading ? 'İlanlar yükleniyor.' : 'Bu görünümde ilan yok.'}</Text>
       ) : (
         rows.map((row) => {
           const interaction = interactions[row.id];
@@ -117,15 +119,17 @@ export default function JobsScreen() {
           }
           return (
             <View key={row.id} className="mb-3 rounded-3xl border border-line bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+              <Pressable accessibilityRole="button" onPress={() => router.push(`/position/${row.id}`)}>
               <View className="flex-row items-start justify-between gap-3">
                 <View className="flex-1">
-                  <Text className="text-xs font-semibold text-brand-700">{row.institution}</Text>
+                  <Text className="text-xs font-semibold text-brand-700 dark:text-brand-100">{row.institution}</Text>
                   <Text className="mt-1 text-lg font-bold text-ink dark:text-white">{row.title}</Text>
                 </View>
                 {matchIds.has(row.id) ? <Text className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">Uygun</Text> : null}
               </View>
               <JobNotice start={row.start} end={row.end} />
               <JobChips end={row.end} education={row.education} quota={row.quota} requiresKpss={row.requiresKpss} kpssType={row.kpssType} minKpssScore={row.minKpssScore} />
+              </Pressable>
               <CardActions
                 saved={Boolean(interaction?.isSaved)}
                 hidden={Boolean(interaction?.isHidden)}
@@ -134,8 +138,8 @@ export default function JobsScreen() {
                 onOpen={() => router.push(`/position/${row.id}`)}
               />
               {row.sourceUrl ? (
-                <Pressable accessibilityRole="link" onPress={() => void openOfficialSource(row.sourceUrl)} className="mt-3">
-                  <Text className="text-sm font-semibold text-brand-700">{sourceLabel(row.sourceName)} sitesinde aç</Text>
+                <Pressable accessibilityRole="link" onPress={() => void openOfficialSource(row.sourceName, row.sourceUrl, row.announcement, row.institution, row.start)} className="mt-3">
+                  <Text className="text-sm font-semibold text-brand-700 dark:text-brand-100">{sourceLabel(row.sourceName)} sitesinde aç</Text>
                 </Pressable>
               ) : null}
             </View>

@@ -74,8 +74,8 @@ export default function PaywallScreen() {
                 <Text className="text-base font-bold text-ink dark:text-white">{plan.title}</Text>
                 {plan.badge ? <Text className="rounded-full bg-brand-700 px-2 py-1 text-[11px] font-semibold text-white">{plan.badge}</Text> : null}
               </View>
-              <Text className="mt-0.5 text-sm font-semibold text-brand-700">{storePrice ?? plan.price}</Text>
-              <Text className="text-xs text-muted">{plan.monthly} · {plan.note}</Text>
+              <Text className="mt-0.5 text-sm font-semibold text-brand-700 dark:text-brand-100">{storePrice ?? plan.price}</Text>
+              <Text className="text-xs text-muted dark:text-slate-300">{plan.monthly} · {plan.note}</Text>
             </Pressable>
           );
         })}
@@ -94,14 +94,14 @@ export default function PaywallScreen() {
             />
           </View>
         ) : null}
-        <Text className="mt-4 px-2 text-center text-xs leading-5 text-muted">
-          Ödeme Apple veya Google hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse aynı fiyatla yenilenir.
+        <Text className="mt-4 px-2 text-center text-xs leading-5 text-muted dark:text-slate-300">
+          Ödeme Apple veya Google hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse yenilenir.
         </Text>
         <View className="mt-5 flex-row flex-wrap items-center justify-center">
           <Pressable accessibilityRole="link" onPress={() => router.push('/legal/terms')}>
-            <Text className="text-xs text-muted">Kullanım koşulları</Text>
+            <Text className="text-xs text-muted dark:text-slate-300">Kullanım koşulları</Text>
           </Pressable>
-          <Text className="px-2 text-xs text-muted">·</Text>
+          <Text className="px-2 text-xs text-muted dark:text-slate-300">·</Text>
           <Pressable
             accessibilityRole="button"
             onPress={async () => {
@@ -112,11 +112,11 @@ export default function PaywallScreen() {
               } else setError('Aktif abonelik bulunamadı.');
             }}
           >
-            <Text className="text-xs text-muted">Satın alımları geri yükle</Text>
+            <Text className="text-xs text-muted dark:text-slate-300">Satın alımları geri yükle</Text>
           </Pressable>
-          <Text className="px-2 text-xs text-muted">·</Text>
+          <Text className="px-2 text-xs text-muted dark:text-slate-300">·</Text>
           <Pressable accessibilityRole="link" onPress={() => router.push('/legal/privacy')}>
-            <Text className="text-xs text-muted">Gizlilik politikası</Text>
+            <Text className="text-xs text-muted dark:text-slate-300">Gizlilik politikası</Text>
           </Pressable>
         </View>
       </Animated.View>

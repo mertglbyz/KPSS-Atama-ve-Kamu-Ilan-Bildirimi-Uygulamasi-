@@ -1,3 +1,6 @@
+import { useRouter } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 import { ReactNode } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,10 +28,26 @@ export function Screen({ children, scroll = true }: { children: ReactNode; scrol
   );
 }
 
+export function BackButton({ fallback = '/(tabs)' }: { fallback?: '/' | '/(tabs)' | '/(tabs)/jobs' | '/paywall' | '/(onboarding)/step5-documents' }) {
+  const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Geri"
+      onPress={() => (router.canGoBack() ? router.back() : router.replace(fallback))}
+      className="mb-2 mt-2 flex-row items-center self-start gap-1 rounded-full border border-line bg-white py-2 pl-2 pr-3 dark:border-slate-700 dark:bg-slate-800"
+    >
+      <ChevronLeft color={colorScheme === 'dark' ? '#F4F7F8' : '#102A32'} size={18} strokeWidth={2.4} />
+      <Text className="text-sm font-semibold text-ink dark:text-white">Geri</Text>
+    </Pressable>
+  );
+}
+
 export function Title({ children, subtitle }: { children: string; subtitle?: string }) {
   return (
     <View className="mb-5 mt-3">
-      <Text className="text-xs font-semibold tracking-[2px] text-brand-700">KPSS ATAMA</Text>
+      <Text className="text-xs font-semibold tracking-[2px] text-brand-700 dark:text-brand-100">KPSS ATAMA</Text>
       <Text className="mt-1 text-3xl font-bold text-ink dark:text-white">{children}</Text>
       {subtitle ? <Text className="mt-2 text-sm leading-6 text-muted dark:text-slate-400">{subtitle}</Text> : null}
     </View>
@@ -37,7 +56,7 @@ export function Title({ children, subtitle }: { children: string; subtitle?: str
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <View style={cardShadow} className={`rounded-3xl border border-line bg-white p-4 dark:border-slate-800 dark:bg-slate-900 ${className}`}>
+    <View style={cardShadow} className={`rounded-3xl border border-line bg-white p-4 dark:border-[#2A4550] dark:bg-[#17313A] ${className}`}>
       {children}
     </View>
   );
@@ -137,7 +156,7 @@ export function ToggleRow({ label, detail, value, onValueChange }: { label: stri
     <View className="mb-3 flex-row items-center justify-between rounded-2xl border border-line bg-white px-4 py-3.5 dark:border-slate-800 dark:bg-slate-900">
       <View className="mr-3 flex-1">
         <Text className="font-semibold text-ink dark:text-white">{label}</Text>
-        {detail ? <Text className="mt-1 text-xs leading-4 text-muted">{detail}</Text> : null}
+        {detail ? <Text className="mt-1 text-xs leading-4 text-muted dark:text-slate-300">{detail}</Text> : null}
       </View>
       <Switch value={value} onValueChange={onValueChange} trackColor={{ true: '#1A4A57', false: '#D5DEE2' }} />
     </View>

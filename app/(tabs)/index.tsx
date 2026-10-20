@@ -41,18 +41,18 @@ export default function Dashboard() {
   return (
     <Screen>
       <View className="mb-6 mt-2 flex-row items-center gap-3">
-        <View className="h-12 w-12 items-center justify-center rounded-2xl bg-ink">
+        <View className="h-12 w-12 items-center justify-center rounded-2xl bg-brand-700">
           <Text className="text-lg font-bold text-white">{initials(draft.nickname)}</Text>
         </View>
         <View>
-          <Text className="text-xs font-semibold tracking-[2px] text-muted">İYİ GÜNLER</Text>
+          <Text className="text-xs font-semibold tracking-[2px] text-muted dark:text-slate-300">İYİ GÜNLER</Text>
           <Text className="text-xl font-bold text-ink dark:text-white">{draft.nickname || 'aday'}</Text>
         </View>
       </View>
 
       {mode === 'demo' || !isSupabaseConfigured ? <Banner text="Örnek veri açık. Canlı ilanlar Supabase ve kazıyıcı bağlanınca gelir." /> : null}
 
-      <View className="rounded-3xl bg-ink p-5" style={{ shadowColor: '#111827', shadowOpacity: 0.2, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 6 }}>
+      <View className="rounded-3xl border border-transparent bg-ink p-5 dark:border-[#2A4550] dark:bg-[#17313A]" style={{ shadowColor: '#111827', shadowOpacity: 0.2, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 6 }}>
         <Text className="text-xs font-semibold tracking-[2px] text-slate-300">SANA UYGUN</Text>
         <View className="mt-2 flex-row items-end justify-between">
           <Text className="text-6xl font-bold text-white">{data?.totalPositions ?? '–'}</Text>
@@ -64,48 +64,48 @@ export default function Dashboard() {
         </Pressable>
       </View>
 
-      <Text className="mb-4 mt-3 text-xs text-muted">Son güncelleme {formatDate(data?.lastSuccessAt)}</Text>
+      <Text className="mb-4 mt-3 text-xs text-muted dark:text-slate-300">Son güncelleme {formatDate(data?.lastSuccessAt)}</Text>
 
       <Pressable accessibilityRole="button" onPress={openMatches} className="mb-4 rounded-3xl border border-line bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <Text className="text-xs font-semibold tracking-wide text-brand-700">SON 48 SAAT</Text>
+        <Text className="text-xs font-semibold tracking-wide text-brand-700 dark:text-brand-100">SON 48 SAAT</Text>
         <Text className="mt-2 text-3xl font-bold text-ink dark:text-white">{data?.expiring48h ?? 0}</Text>
-        <Text className="mt-1 text-sm text-muted">Başvurusu bitmek üzere olan uygun ilan.</Text>
+        <Text className="mt-1 text-sm text-muted dark:text-slate-300">Başvurusu bitmek üzere olan uygun ilan.</Text>
       </Pressable>
 
       {!draft.sgkPrimDays ? (
         <Pressable accessibilityRole="button" onPress={() => router.push('/(onboarding)/step5-documents?edit=1')} className="mb-4">
-          <Text className="text-sm font-semibold text-brand-700">SGK prim gününü ekle</Text>
+          <Text className="text-sm font-semibold text-brand-700 dark:text-brand-100">SGK prim gününü ekle</Text>
         </Pressable>
       ) : null}
 
       <View className="mb-3">
         <Text className="text-lg font-bold text-ink dark:text-white">Rakip analizi</Text>
-        <Text className="mt-1 text-sm text-muted">KPSS puanınız ve bölüm bazında aday sıralamanız.</Text>
+        <Text className="mt-1 text-sm text-muted dark:text-slate-300">KPSS puanınız ve bölüm bazında aday sıralamanız.</Text>
       </View>
       <Card>
         <Text className="mb-3 font-semibold text-ink dark:text-white">{department}</Text>
         <View className="flex-row gap-3">
           <View className="flex-1 rounded-2xl bg-brand-50 px-3 py-4 dark:bg-slate-800">
-            <Text className="text-xs text-muted">{totalCandidates.toLocaleString('tr-TR')} aday arasında</Text>
+            <Text className="text-xs text-muted dark:text-slate-300">{totalCandidates.toLocaleString('tr-TR')} aday arasında</Text>
             <Text className="mt-1 text-4xl font-bold text-ink dark:text-white">{userRank ? `${userRank.toLocaleString('tr-TR')}.` : '—'}</Text>
-            <Text className="text-sm text-muted">sıradasınız</Text>
+            <Text className="text-sm text-muted dark:text-slate-300">sıradasınız</Text>
           </View>
           <View className="flex-1 rounded-2xl border border-line bg-white px-3 py-4 dark:border-slate-700 dark:bg-slate-900">
-            <Text className="text-xs text-muted">KPSS puanı</Text>
-            <Text className="mt-1 text-4xl font-bold text-brand-700">{draft.hasKpss ? formatScore(score) : '—'}</Text>
-            <Text className="text-sm text-muted">100 üzerinden</Text>
+            <Text className="text-xs text-muted dark:text-slate-300">KPSS puanı</Text>
+            <Text className="mt-1 text-4xl font-bold text-brand-700 dark:text-brand-100">{draft.hasKpss ? formatScore(score) : '—'}</Text>
+            <Text className="text-sm text-muted dark:text-slate-300">100 üzerinden</Text>
           </View>
         </View>
         <Pressable accessibilityRole="button" onPress={() => setShowDistribution((value) => !value)} className="mt-4">
-          <Text className="font-semibold text-brand-700">{showDistribution ? 'Puan dağılımını gizle' : 'Puan dağılımını göster'}</Text>
+          <Text className="font-semibold text-brand-700 dark:text-brand-100">{showDistribution ? 'Puan dağılımını gizle' : 'Puan dağılımını göster'}</Text>
         </Pressable>
         {showDistribution ? (
           <View className="mt-3 gap-2">
-            {(buckets.data ?? []).length === 0 ? <Text className="text-sm text-muted">Bu bölüm için henüz dağılım yok.</Text> : null}
+            {(buckets.data ?? []).length === 0 ? <Text className="text-sm text-muted dark:text-slate-300">Bu bölüm için henüz dağılım yok.</Text> : null}
             {(buckets.data ?? []).map((bucket) => (
               <View key={bucket.label}>
-                <Text className="text-xs text-muted">{bucket.label} · {bucket.count}</Text>
-                <View className="mt-1 h-2 overflow-hidden rounded-full bg-brand-50">
+                <Text className="text-xs text-muted dark:text-slate-300">{bucket.label} · {bucket.count}</Text>
+                <View className="mt-1 h-2 overflow-hidden rounded-full bg-brand-50 dark:bg-slate-700">
                   <View className="h-2 rounded-full bg-brand-700" style={{ width: `${(bucket.count / maxBucket) * 100}%` }} />
                 </View>
               </View>
@@ -114,7 +114,7 @@ export default function Dashboard() {
         ) : null}
       </Card>
       <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/(tabs)/jobs', params: { scope: 'archive' } })} className="mt-4">
-        <Text className="text-sm font-semibold text-brand-700">Geçmiş ilanlar</Text>
+        <Text className="text-sm font-semibold text-brand-700 dark:text-brand-100">Geçmiş ilanlar</Text>
       </Pressable>
     </Screen>
   );

@@ -1,4 +1,4 @@
-import type { BaseScore, JobPosition, LocalCourse, SupportMessage } from '@/types/domain';
+import type { JobPosition } from '@/types/domain';
 
 const hoursFromNow = (hours: number) => new Date(Date.now() + hours * 36e5).toISOString();
 const daysAgo = (days: number) => new Date(Date.now() - days * 864e5).toISOString();
@@ -169,30 +169,3 @@ export const DEMO_JOBS: JobPosition[] = [
   },
 ];
 
-export const DEMO_BASE_SCORES: BaseScore[] = [
-  { id: 's1', year: 2024, institutionName: 'Merkezi atama', positionTitle: 'Bilgisayar İşletmeni', department: 'Yazılım Mühendisliği', kpssType: 'P3', minScore: 86.42, sourceNote: 'Örnek arşiv' },
-  { id: 's2', year: 2024, institutionName: 'Merkezi atama', positionTitle: 'Memur', department: 'İşletme', kpssType: 'P3', minScore: 91.15, sourceNote: 'Örnek arşiv' },
-  { id: 's3', year: 2023, institutionName: 'Merkezi atama', positionTitle: 'VHKİ', department: 'Kamu Yönetimi', kpssType: 'P3', minScore: 88.7, sourceNote: 'Örnek arşiv' },
-  { id: 's4', year: 2023, institutionName: 'Örnek Belediye', positionTitle: 'Zabıta Memuru', department: 'Genel Ortaöğretim', kpssType: 'P94', minScore: 79.2, sourceNote: 'Örnek arşiv' },
-  { id: 's5', year: 2022, institutionName: 'Merkezi atama', positionTitle: 'Tekniker', department: 'Bilgisayar Programcılığı', kpssType: 'P93', minScore: 82.04, sourceNote: 'Örnek arşiv' },
-  { id: 's6', year: 2022, institutionName: 'Merkezi atama', positionTitle: 'Hemşire', department: 'Hemşirelik', kpssType: 'P3', minScore: 84.55, sourceNote: 'Örnek arşiv' },
-];
-
-export const DEMO_COURSES: LocalCourse[] = [
-  { id: 'c1', city: 'İstanbul', provider: 'İSMEK', title: 'Bilgisayar İşletmenliği', detail: 'Örnek kurs rehberi' },
-  { id: 'c2', city: 'İstanbul', provider: 'Halk Eğitim', title: 'İlk Yardım', detail: 'Örnek kurs rehberi' },
-  { id: 'c3', city: 'Ankara', provider: 'BELMEK', title: 'Kalorifer Ateşçiliği', detail: 'Örnek kurs rehberi' },
-  { id: 'c4', city: 'İzmir', provider: 'Halk Eğitim', title: 'SRC ve temel trafik', detail: 'Örnek kurs rehberi' },
-  { id: 'c5', city: 'Bursa', provider: 'Halk Eğitim', title: 'Bilgisayar İşletmenliği', detail: 'Örnek kurs rehberi' },
-];
-
-export const DEMO_MESSAGES: SupportMessage[] = [
-  {
-    id: 'm1',
-    sender: 'support',
-    body: 'Merhaba. Başvuru şartı veya profil eşleşmesiyle ilgili sorunu buraya yazabilirsin.',
-    createdAt: daysAgo(1),
-  },
-];
-
-export const DEMO_COHORT = [92, 88, 86, 84, 81, 79, 76, 74, 71, 68, 64, 60];

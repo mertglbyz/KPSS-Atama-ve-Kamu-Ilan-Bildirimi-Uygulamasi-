@@ -1,5 +1,5 @@
 import { Text } from 'react-native';
-import { Screen, Title } from '@/components/ui';
+import { BackButton, Screen, Title } from '@/components/ui';
 
 function Block({ heading, body }: { heading: string; body: string }) {
   return (
@@ -13,6 +13,7 @@ function Block({ heading, body }: { heading: string; body: string }) {
 export default function PrivacyScreen() {
   return (
     <Screen>
+      <BackButton fallback="/paywall" />
       <Title subtitle="Yürürlük: 19 Ekim 2026">Gizlilik politikası</Title>
       <Text className="text-sm leading-6 text-ink dark:text-slate-200">
         Bu politika KPSS Atama uygulaması için geçerlidir. Veri sorumlusu: Mert Gülbeyaz. Başvuru adresi: gulbeyazm6@gmail.com.

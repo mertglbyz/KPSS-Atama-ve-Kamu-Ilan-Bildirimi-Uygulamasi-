@@ -11,7 +11,7 @@ export default function Gate() {
   if (!ready || !hydrated) {
     return (
       <View className="flex-1 items-center justify-center bg-canvas dark:bg-night">
-        <Text className="text-xs font-semibold tracking-[3px] text-brand-700">KPSS ATAMA</Text>
+        <Text className="text-xs font-semibold tracking-[3px] text-brand-700 dark:text-brand-100">KPSS ATAMA</Text>
         <Text className="mt-3 text-lg text-ink dark:text-white">Profilin hazırlanıyor</Text>
       </View>
     );

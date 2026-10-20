@@ -25,16 +25,16 @@ export function SelectField({
     <View className="mb-3">
       <View className="mb-1.5 flex-row items-center justify-between">
         <Text className="text-sm font-semibold text-ink dark:text-slate-200">{label}</Text>
-        <Text className="text-xs text-muted">{options.length} kayıt</Text>
+        <Text className="text-xs text-muted dark:text-slate-300">{options.length} kayıt</Text>
       </View>
       <Pressable accessibilityRole="button" onPress={() => setOpen(true)} className="rounded-2xl border border-line bg-white px-4 py-3.5 dark:border-slate-700 dark:bg-slate-900">
         <Text className={value ? 'text-base text-ink dark:text-white' : 'text-base text-slate-400'}>{value || placeholder}</Text>
       </Pressable>
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
         <View className="flex-1 bg-canvas px-5 pt-14 dark:bg-slate-950">
-          <Text className="text-xs font-semibold tracking-[2px] text-brand-700">LİSTE</Text>
+          <Text className="text-xs font-semibold tracking-[2px] text-brand-700 dark:text-brand-100">LİSTE</Text>
           <Text className="mb-1 text-2xl font-bold text-ink dark:text-white">{label}</Text>
-          <Text className="mb-3 text-sm text-muted">{filtered.length} sonuç</Text>
+          <Text className="mb-3 text-sm text-muted dark:text-slate-300">{filtered.length} sonuç</Text>
           <TextInput
             value={query}
             onChangeText={setQuery}
@@ -64,7 +64,7 @@ export function SelectField({
             }}
           />
           <Pressable accessibilityRole="button" onPress={() => setOpen(false)} className="my-3 items-center py-3">
-            <Text className="font-semibold text-brand-700">Kapat</Text>
+            <Text className="font-semibold text-brand-700 dark:text-brand-100">Kapat</Text>
           </Pressable>
         </View>
       </Modal>

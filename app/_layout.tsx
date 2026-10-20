@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { AppProviders } from '@/providers/AppProviders';
+import { useAppStore } from '@/store/useAppStore';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -31,16 +32,23 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProviders>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(onboarding)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="position/[id]" options={{ headerShown: true, title: 'İlan', headerTintColor: '#111827', headerStyle: { backgroundColor: '#F4F7F8' } }} />
-          <Stack.Screen name="legal/privacy" options={{ headerShown: true, title: 'Gizlilik', headerTintColor: '#111827', headerStyle: { backgroundColor: '#F4F7F8' } }} />
-          <Stack.Screen name="legal/terms" options={{ headerShown: true, title: 'Koşullar', headerTintColor: '#111827', headerStyle: { backgroundColor: '#F4F7F8' } }} />
-        </Stack>
+        <ThemedStack />
       </AppProviders>
     </QueryClientProvider>
+  );
+}
+
+function ThemedStack() {
+  const dark = useAppStore((state) => state.colorScheme) === 'dark';
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: dark ? '#102027' : '#F4F7F8' } }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(onboarding)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="position/[id]" />
+      <Stack.Screen name="legal/privacy" />
+      <Stack.Screen name="legal/terms" />
+    </Stack>
   );
 }

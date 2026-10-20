@@ -1,0 +1,24 @@
+name: Publish app update
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Publish JavaScript update
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "EXPO_TOKEN yok. Mağaza sürümü yayınlanmadı. JS güncellemesi atlandı."
+            exit 0
+          fi
+          npx eas-cli@latest update --channel production --non-interactive --environment production --message "update ${GITHUB_SHA}"

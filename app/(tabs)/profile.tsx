@@ -23,7 +23,7 @@ export default function ProfileScreen() {
       <Title subtitle="Eşleşme bu özete göre çalışır.">Profil</Title>
       <Card className="mb-4">
         <Text className="text-xl font-bold text-ink dark:text-white">{draft.nickname}</Text>
-        <Text className="mt-2 text-sm leading-6 text-muted">
+        <Text className="mt-2 text-sm leading-6 text-muted dark:text-slate-300">
           {draft.age} yaş · {draft.gender} · {draft.city}
           {'\n'}
           {draft.educations.map((item) => `${item.level} / ${item.department}`).join('\n')}
@@ -37,7 +37,7 @@ export default function ProfileScreen() {
         <Pressable key={href} onPress={() => router.push(`${href}?edit=1`)} className="mb-2 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
           <View className="flex-row items-center justify-between">
             <Text className="font-medium text-ink dark:text-white">{label}</Text>
-            <Text className="text-brand-700">Düzenle</Text>
+            <Text className="text-brand-700 dark:text-brand-100">Düzenle</Text>
           </View>
         </Pressable>
       ))}

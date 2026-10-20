@@ -1,19 +1,16 @@
-import { DEMO_BASE_SCORES, DEMO_COURSES, DEMO_JOBS, DEMO_MESSAGES } from '@/lib/demo-data';
-import { careerTips, matchedPositions, summarize } from '@/lib/match';
+import { DEMO_JOBS } from '@/lib/demo-data';
+import { matchedPositions, summarize } from '@/lib/match';
 import { fromProfileRow, toMatchProfile, toProfileUpdate } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import type {
   AppNotification,
-  BaseScore,
   CompetitorRank,
   JobPosition,
-  LocalCourse,
   MatchSummary,
   ProfileDraft,
   PublicJobCard,
   ScoreBucket,
-  SupportMessage,
 } from '@/types/domain';
 
 function asNumber(value: unknown, fallback = 0): number {
@@ -206,35 +203,6 @@ export async function fetchDistribution(userId: string, department: string, prem
   return (data ?? []).map((row: { label: string; count: number }) => ({ label: row.label, count: asNumber(row.count) }));
 }
 
-export async function fetchBaseScores(userId: string, premium: boolean): Promise<BaseScore[]> {
-  if (!supabase || useAppStore.getState().mode !== 'live') return premium ? DEMO_BASE_SCORES : DEMO_BASE_SCORES.slice(0, 3);
-  const { data, error } = await supabase.rpc('list_base_scores', { p_user_id: userId });
-  if (error) throw error;
-  return (data ?? []).map((row: Record<string, unknown>) => ({
-    id: String(row.id),
-    year: asNumber(row.year),
-    institutionName: String(row.institution_name),
-    positionTitle: String(row.position_title),
-    department: row.department ? String(row.department) : null,
-    kpssType: row.kpss_type ? String(row.kpss_type) : null,
-    minScore: asNumber(row.min_score),
-    sourceNote: row.source_note ? String(row.source_note) : null,
-  }));
-}
-
-export async function fetchCourses(city: string): Promise<LocalCourse[]> {
-  if (!supabase || useAppStore.getState().mode !== 'live') return DEMO_COURSES.filter((course) => !city || course.city === city);
-  const { data, error } = await supabase.rpc('list_courses', { p_city: city });
-  if (error) throw error;
-  return (data ?? []).map((row: Record<string, unknown>) => ({
-    id: String(row.id),
-    city: String(row.city),
-    provider: String(row.provider),
-    title: String(row.title),
-    detail: row.detail ? String(row.detail) : null,
-  }));
-}
-
 export async function fetchNotifications(userId: string): Promise<AppNotification[]> {
   if (!supabase || useAppStore.getState().mode !== 'live') {
     return [
@@ -265,19 +233,6 @@ export async function markNotificationRead(id: string): Promise<void> {
   await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id);
 }
 
-export async function fetchMessages(userId: string): Promise<SupportMessage[]> {
-  if (!supabase || useAppStore.getState().mode !== 'live') return DEMO_MESSAGES;
-  const { data, error } = await supabase.from('support_messages').select('*').eq('user_id', userId).order('created_at', { ascending: true });
-  if (error) throw error;
-  return (data ?? []).map((row) => ({ id: row.id, body: row.body, sender: row.sender, createdAt: row.created_at }));
-}
-
-export async function sendMessage(userId: string, body: string): Promise<void> {
-  if (!supabase || useAppStore.getState().mode !== 'live') return;
-  const { error } = await supabase.from('support_messages').insert({ user_id: userId, body, sender: 'user' });
-  if (error) throw error;
-}
-
 export async function upsertInteraction(userId: string, positionId: string, patch: Record<string, unknown>): Promise<void> {
   if (!supabase || positionId.startsWith('demo-')) return;
   const { error } = await supabase.from('user_job_interactions').upsert(
@@ -287,12 +242,3 @@ export async function upsertInteraction(userId: string, positionId: string, patc
   if (error) throw error;
 }
 
-export function localTips(draft: ProfileDraft) {
-  return careerTips(toMatchProfile(draft), DEMO_JOBS);
-}
-
-export async function deleteAccount(): Promise<void> {
-  if (!supabase || useAppStore.getState().mode !== 'live') return;
-  const { error } = await supabase.functions.invoke('delete-account');
-  if (error) throw error;
-}

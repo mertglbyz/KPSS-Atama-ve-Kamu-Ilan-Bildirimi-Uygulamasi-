@@ -42,7 +42,18 @@ export function AppProviders({ children }: { children: ReactNode }) {
     const timer = setTimeout(() => {
       if (!useProfileStore.getState().hydrated) useProfileStore.getState().setHydrated(true);
     }, 1600);
-    setColorScheme(useAppStore.getState().colorScheme);
+    const pending = new Set<ReturnType<typeof setTimeout>>();
+    const applyScheme = (scheme: 'light' | 'dark') => {
+      const timerId = setTimeout(() => {
+        pending.delete(timerId);
+        setColorScheme(scheme);
+      }, 0);
+      pending.add(timerId);
+    };
+    applyScheme(useAppStore.getState().colorScheme);
+    const stopScheme = useAppStore.subscribe((state, previous) => {
+      if (state.colorScheme !== previous.colorScheme) applyScheme(state.colorScheme);
+    });
     let unsubscribe = () => {};
 
     async function boot() {
@@ -100,6 +111,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
     void boot();
     return () => {
       clearTimeout(timer);
+      pending.forEach((timerId) => clearTimeout(timerId));
+      stopScheme();
       unsubscribe();
     };
   }, [setColorScheme]);

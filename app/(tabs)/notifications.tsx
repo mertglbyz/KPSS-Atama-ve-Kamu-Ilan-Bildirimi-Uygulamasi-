@@ -20,17 +20,17 @@ export default function NotificationsScreen() {
             await markNotificationRead(item.id);
             await client.invalidateQueries({ queryKey: ['notifications', userId] });
           }}
-          className="mb-3 rounded-3xl bg-white p-4 dark:bg-slate-900"
+          className="mb-3 rounded-3xl border border-line bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
         >
           <View className="flex-row items-center justify-between">
             <Text className="font-semibold text-ink dark:text-white">{item.title}</Text>
             {item.readAt ? null : <View className="h-2 w-2 rounded-full bg-brand-700" />}
           </View>
-          <Text className="mt-1 text-sm leading-5 text-muted">{item.body}</Text>
+          <Text className="mt-1 text-sm leading-5 text-muted dark:text-slate-300">{item.body}</Text>
           <Text className="mt-2 text-xs text-slate-400">{formatDate(item.createdAt)}</Text>
         </Pressable>
       ))}
-      {!notifications.data?.length ? <Text className="text-muted">Henüz bildirim yok.</Text> : null}
+      {!notifications.data?.length ? <Text className="text-muted dark:text-slate-300">Henüz bildirim yok.</Text> : null}
     </Screen>
   );
 }

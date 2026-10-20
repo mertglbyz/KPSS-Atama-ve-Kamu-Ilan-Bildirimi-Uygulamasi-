@@ -48,7 +48,7 @@ export default function StepEducation() {
                     className={`rounded-2xl border px-4 py-3 ${active ? 'border-brand-700 bg-brand-700' : 'border-line bg-white dark:bg-slate-900'}`}
                   >
                     <Text className={`font-semibold ${active ? 'text-white' : 'text-ink dark:text-white'}`}>{item.title}</Text>
-                    <Text className={`mt-0.5 text-xs ${active ? 'text-white/80' : 'text-muted'}`}>{item.caption}</Text>
+                    <Text className={`mt-0.5 text-xs ${active ? 'text-white/80' : 'text-muted dark:text-slate-300'}`}>{item.caption}</Text>
                   </Pressable>
                 );
               })}

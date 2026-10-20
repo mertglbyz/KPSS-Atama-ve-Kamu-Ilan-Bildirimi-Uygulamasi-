@@ -155,28 +155,3 @@ export type JobInteraction = {
   applicationStatus: ApplicationStatus;
 };
 
-export type BaseScore = {
-  id: string;
-  year: number;
-  institutionName: string;
-  positionTitle: string;
-  department: string | null;
-  kpssType: string | null;
-  minScore: number;
-  sourceNote: string | null;
-};
-
-export type LocalCourse = {
-  id: string;
-  city: string;
-  provider: string;
-  title: string;
-  detail: string | null;
-};
-
-export type SupportMessage = {
-  id: string;
-  body: string;
-  sender: 'user' | 'support';
-  createdAt: string;
-};

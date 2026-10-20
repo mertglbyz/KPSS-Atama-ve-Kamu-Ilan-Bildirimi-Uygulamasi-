@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
-import { Button, Card, Screen, Title } from '@/components/ui';
+import { BackButton, Button, Card, Screen, Title } from '@/components/ui';
 import { fetchSummary } from '@/lib/data';
 import { useAppStore } from '@/store/useAppStore';
 import { useProfileStore } from '@/store/useProfileStore';
@@ -22,6 +22,7 @@ export default function OnboardingResult() {
 
   return (
     <Screen>
+      <BackButton fallback="/(onboarding)/step5-documents" />
       <Title subtitle="Sıradaki adım, sana uyan ilanları açmak.">Profilin hazır</Title>
       <Card>
         <Text className="text-lg font-semibold leading-7 text-ink dark:text-white">{message}</Text>

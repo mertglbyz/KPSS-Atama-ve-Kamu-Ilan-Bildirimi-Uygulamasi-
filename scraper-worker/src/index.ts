@@ -40,7 +40,7 @@ async function noteAlternate(existingId: string, ad: DiscoveredAd) {
   }).eq('id', existingId);
 }
 
-async function notify(positionId: string, kind: 'new_job' | 'deadline', body: string, title = kind === 'deadline' ? 'Son 48 saat' : 'Yeni uygun ilan', dedupe: string = kind) {
+async function notify(positionId: string, kind: 'new_job' | 'deadline' | 'result', body: string, title = kind === 'deadline' ? 'Son 48 saat' : kind === 'result' ? 'İlan güncellendi' : 'Yeni uygun ilan', dedupe: string = kind) {
   const { data, error } = await supabase.rpc('users_to_notify_for_position', {
     p_position_id: positionId,
     p_kind: kind,
@@ -102,7 +102,7 @@ async function saveAd(ad: DiscoveredAd, options: { hash: string; existingId?: st
   if (kind === 'cancelled' && existing) {
     const current = await supabase.from('job_positions').select('id, position_title').eq('announcement_id', existing.id);
     for (const position of current.data ?? []) {
-      await notify(position.id, 'new_job', `${ad.institutionName}: ${position.position_title} ilanı iptal edildi.`, 'İlan iptal edildi', `cancel:${options.hash}`);
+      await notify(position.id, 'result', `${ad.institutionName}: ${position.position_title} ilanı iptal edildi.`, 'İlan iptal edildi', `cancel:${options.hash}`);
     }
     await supabase.from('announcements').update({ status: 'archived', listing_state: 'cancelled', body_hash: options.hash }).eq('id', existing.id);
     return existing.id;
@@ -174,7 +174,7 @@ async function saveAd(ad: DiscoveredAd, options: { hash: string; existingId?: st
   for (const position of positionWrite.data ?? []) {
     await notify(
       position.id,
-      'new_job',
+      updated ? 'result' : 'new_job',
       `${ad.institutionName}: ${position.position_title}`,
       updated ? 'İlan güncellendi' : 'Yeni uygun ilan',
       updated ? `revision:${options.hash}` : 'new_job',
