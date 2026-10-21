@@ -40,7 +40,8 @@ function ThemedStack() {
   const dark = useAppStore((state) => state.colorScheme) === 'dark';
 
   useEffect(() => {
-    if (ready && completed && segments[0] === '(onboarding)' && segments[1] === 'step1-personal') router.replace('/(tabs)');
+    const route = segments.join('/');
+    if (ready && completed && route === '(onboarding)/step1-personal') router.replace('/(tabs)');
   }, [ready, completed, segments, router]);
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: dark ? '#102027' : '#F4F7F8' } }}>
