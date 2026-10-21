@@ -35,6 +35,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-dev-client",
       [
         "expo-splash-screen",
         {
@@ -72,7 +73,9 @@
     },
     "owner": "mertglbyz",
     "updates": {
-      "url": "https://u.expo.dev/4d36f122-ca18-48f2-8180-eebb8d0194aa"
+      "url": "https://u.expo.dev/4d36f122-ca18-48f2-8180-eebb8d0194aa",
+      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "fallbackToCacheTimeout": 0
     }
   }
 }
