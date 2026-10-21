@@ -46,12 +46,13 @@ export function sameAnnouncement(
   const rightTokens = new Set(tokens(right.title).filter((word) => !institutionWords.has(word)));
   let shared = 0;
   for (const word of leftTokens) if (rightTokens.has(word)) shared += 1;
+  const qualifiers = new Set(['surekli', 'gecici', 'engelli', 'hukumlu', 'sozlesmeli', 'akademik', 'kadrolu']);
+  const leftQualifier = [...leftTokens].find((word) => qualifiers.has(word));
+  const rightQualifier = [...rightTokens].find((word) => qualifiers.has(word));
+  if (leftQualifier !== rightQualifier) return false;
   const roleWords = new Set(['isci', 'memur', 'uzman', 'hemsire', 'zabita', 'denetci', 'ogretmen', 'sofor', 'avukat', 'muhendis', 'teknisyen', 'hizmetli', 'sondor']);
   if (shared >= 2) return true;
-  if ([...leftTokens].some((word) => rightTokens.has(word) && roleWords.has(word))) return true;
-  const leftOnly = [...leftTokens].join(' ');
-  const rightOnly = [...rightTokens].join(' ');
-  return Boolean(leftOnly && rightOnly && (leftOnly.includes(rightOnly) || rightOnly.includes(leftOnly)));
+  return [...leftTokens].some((word) => rightTokens.has(word) && roleWords.has(word));
 }
 
 export function fingerprint(institutionName: string, title: string): string {

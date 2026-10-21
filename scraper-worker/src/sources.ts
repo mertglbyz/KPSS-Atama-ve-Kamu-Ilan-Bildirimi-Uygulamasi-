@@ -148,20 +148,27 @@ export async function discoverKamuilan(): Promise<DiscoveredAd[]> {
     const href = $(element).attr('href');
     if (!href) return;
     const sourceUrl = new URL(href, 'https://kamuilan.sbb.gov.tr/').toString();
-    if (seen.has(sourceUrl)) return;
-    seen.add(sourceUrl);
+    const inTimeline = $(element).closest('#nav2').length > 0;
+    if (seen.has(sourceUrl) && !inTimeline) return;
     const card = $(element).closest('li, article, .card, tr').text().replace(/\s+/g, ' ').trim();
     const title = ($(element).text().replace(/\s+/g, ' ').trim() || card || 'Kamu personel ilanı')
       .replace(/([A-Za-zÇĞİÖŞÜçğıöşü])(\d)/g, '$1 $2')
       .slice(0, 180);
     const institutionName = title.split(/\d/)[0]?.replace(/alacak.*/i, '').trim() || 'Kamu kurumu';
-    ads.push({
-      sourceName: 'kamuilan',
+    const ad = {
+      sourceName: 'kamuilan' as const,
       sourceUrl,
       title,
       institutionName,
       text: card || title,
-    });
+    };
+    if (seen.has(sourceUrl)) {
+      const index = ads.findIndex((item) => item.sourceUrl === sourceUrl);
+      if (index >= 0) ads[index] = ad;
+      return;
+    }
+    seen.add(sourceUrl);
+    ads.push(ad);
   });
   return ads;
 }

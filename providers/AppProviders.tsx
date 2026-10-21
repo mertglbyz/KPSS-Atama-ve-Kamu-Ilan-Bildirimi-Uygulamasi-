@@ -18,7 +18,7 @@ function waitForProfileHydration() {
       unsubscribe();
       if (!useProfileStore.getState().hydrated) useProfileStore.getState().setHydrated(true);
       resolve();
-    }, 1500);
+    }, 400);
   });
 }
 
@@ -41,12 +41,16 @@ export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!useProfileStore.getState().hydrated) useProfileStore.getState().setHydrated(true);
-    }, 1600);
+    }, 500);
     const pending = new Set<ReturnType<typeof setTimeout>>();
     const applyScheme = (scheme: 'light' | 'dark') => {
       const timerId = setTimeout(() => {
         pending.delete(timerId);
-        setColorScheme(scheme);
+        try {
+          setColorScheme(scheme);
+        } catch {
+          // Tema uygulanamazsa açılış yine sürer.
+        }
       }, 0);
       pending.add(timerId);
     };
@@ -116,7 +120,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
     const bootLimit = setTimeout(() => {
       if (!useAppStore.getState().ready) openDemo();
-    }, 12000);
+    }, 8000);
     void boot();
     return () => {
       clearTimeout(timer);

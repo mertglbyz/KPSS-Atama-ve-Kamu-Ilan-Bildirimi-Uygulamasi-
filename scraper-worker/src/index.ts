@@ -83,6 +83,30 @@ function isStale(value: string | null | undefined) {
   return !Number.isNaN(year) && year < new Date().getFullYear();
 }
 
+function educationLevel(value: string | undefined): 'Ortaöğretim' | 'Önlisans' | 'Lisans' {
+  const folded = (value ?? '').toLocaleLowerCase('tr-TR');
+  if (folded.includes('önlisans') || folded.includes('onlisans')) return 'Önlisans';
+  if (folded.includes('orta') || folded.includes('lise')) return 'Ortaöğretim';
+  if (value === 'Lisans' || value === 'Önlisans' || value === 'Ortaöğretim') return value;
+  return 'Lisans';
+}
+
+function normalizePosition(position: ParsedPosition): ParsedPosition {
+  return { ...position, education_level: educationLevel(position.education_level) };
+}
+
+function fallbackPosition(ad: DiscoveredAd): ParsedPosition {
+  const text = `${ad.title}\n${ad.text}`.toLocaleLowerCase('tr-TR');
+  return {
+    position_title: ad.title.replace(/\s+/g, ' ').trim().slice(0, 140) || 'Kamu personel ilanı',
+    education_level: educationLevel(text),
+    is_general_degree: /herhangi bir|düz memur|duz memur/.test(text),
+    requires_kpss: /kpss/.test(text),
+    cities: [],
+    raw_requirements_text: ad.text.slice(0, 4000),
+  };
+}
+
 async function saveAd(ad: DiscoveredAd, options: { hash: string; existingId?: string; localKind: 'active' | 'revised' | 'cancelled' }): Promise<string | undefined> {
   const { data: existing } = options.existingId
     ? await supabase.from('announcements').select('id, source_url').eq('id', options.existingId).maybeSingle()
@@ -93,12 +117,13 @@ async function saveAd(ad: DiscoveredAd, options: { hash: string; existingId?: st
   }
   const pdf = ad.pdfUrl ? await downloadPdf(ad.pdfUrl) : undefined;
   const parsed = await parseAnnouncement(`${ad.institutionName}\n${ad.title}\n${ad.text}`, pdf);
-  const positions = parsed.positions ?? [];
   const kind = options.localKind === 'cancelled' || parsed.notice_kind === 'cancelled'
     ? 'cancelled'
-    : options.localKind === 'revised' || parsed.notice_kind === 'revised' || existing
+    : options.localKind === 'revised' || parsed.notice_kind === 'revised'
       ? 'revised'
       : 'active';
+  const parsedPositions = (parsed.positions ?? []).map(normalizePosition);
+  const positions = kind === 'cancelled' ? [] : parsedPositions.length ? parsedPositions : [fallbackPosition(ad)];
   if (kind === 'cancelled' && existing) {
     const current = await supabase.from('job_positions').select('id, position_title').eq('announcement_id', existing.id);
     for (const position of current.data ?? []) {
@@ -170,7 +195,7 @@ async function saveAd(ad: DiscoveredAd, options: { hash: string; existingId?: st
     notes.push('Boy ve kilo sütunları henüz yok. Supabase SQL dosyasını çalıştır.');
   }
   if (positionWrite.error) throw positionWrite.error;
-  const updated = Boolean(existing);
+  const updated = Boolean(existing) && kind === 'revised';
   for (const position of positionWrite.data ?? []) {
     await notify(
       position.id,

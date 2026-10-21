@@ -12,7 +12,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mertglbyz.kpssatama"
+      "bundleIdentifier": "com.mertglbyz.kpssatama",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.mertglbyz.kpssatama",
@@ -35,9 +38,15 @@
       [
         "expo-splash-screen",
         {
+          "backgroundColor": "#143F4C",
           "image": "./assets/images/splash.png",
           "resizeMode": "cover",
-          "backgroundColor": "#143F4C"
+          "imageWidth": 280,
+          "ios": {
+            "enableFullScreenImage_legacy": true,
+            "resizeMode": "cover",
+            "backgroundColor": "#143F4C"
+          }
         }
       ],
       "expo-secure-store",

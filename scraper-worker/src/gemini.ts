@@ -25,6 +25,9 @@ const responseSchema = {
           requires_kpss: { type: Type.BOOLEAN },
           kpss_type: { type: Type.STRING },
           min_kpss_score: { type: Type.NUMBER },
+          min_yds_score: { type: Type.NUMBER },
+          allowed_genders: { type: Type.ARRAY, items: { type: Type.STRING } },
+          required_certificates: { type: Type.ARRAY, items: { type: Type.STRING } },
           min_age: { type: Type.INTEGER },
           max_age: { type: Type.INTEGER },
           min_height_male: { type: Type.INTEGER },
@@ -51,7 +54,7 @@ export async function parseAnnouncement(text: string, pdf?: Buffer): Promise<Par
       ? [{ inlineData: { data: pdf.toString('base64'), mimeType: 'application/pdf' } }]
       : []),
     `Aşağıdaki kamu personel alımı ilan metnini ve varsa ekteki PDF veya Word metnini analiz et.
-İlandaki her kadro satırını ayrı bir JSON öğesi olarak çıkar. Boy, kilo, yaş, cinsiyet, ehliyet, sertifika, güvenlik kartı, engellilik, SGK günü ve KPSS şartının hepsini ilgili alana yaz. Şart yoksa 0 veya false bırak.
+İlandaki her kadro satırını ayrı bir JSON öğesi olarak çıkar. Boy, kilo, yaş, cinsiyet, ehliyet, sertifika, güvenlik kartı, engellilik, SGK günü, YDS ve KPSS şartının hepsini ilgili alana yaz. Metinde açıkça yazmayan şartı uydurma; yoksa 0, false veya boş liste bırak. Cinsiyet sınırı yoksa allowed_genders alanını Erkek ve Kadın olarak doldur.
 KPSS türünü ilandaki gibi yaz: P1, P2, P3, P93, P94 veya A grubu alan adı (Hukuk, İktisat, Maliye, İşletme, Muhasebe, Kamu Yönetimi, Uluslararası İlişkiler, Çalışma Ekonomisi, İstatistik, Ekonometri, Finans).
 Boy ve kiloyu santimetre ve kilogram olarak, kadın ve erkek için ayrı yaz. Üst sınır varsa max alanlarını doldur.
 Bu metin bir düzeltme veya revizyon ise notice_kind revised olsun. İlan veya kadro iptal edildiyse notice_kind cancelled olsun ve güncel kadro bırakma. Değilse active yaz.

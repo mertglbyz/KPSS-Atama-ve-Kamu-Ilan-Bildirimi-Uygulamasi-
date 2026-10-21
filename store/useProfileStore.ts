@@ -73,15 +73,19 @@ export const useProfileStore = create<ProfileState>()(
       name: 'kpss-profile',
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state) => {
-        if (!state) return;
-        const educations = state.draft.educations.map((item) =>
-          (item.level as string) === 'Lise' ? { ...item, level: 'Ortaöğretim' as const } : item,
-        );
-        if (educations.some((item, index) => item.level !== state.draft.educations[index]?.level)) {
-          state.patch({ educations });
+        try {
+          if (!state?.draft) return;
+          const educations = Array.isArray(state.draft.educations) ? state.draft.educations : [];
+          const normalized = educations.map((item) =>
+            (item.level as string) === 'Lise' ? { ...item, level: 'Ortaöğretim' as const } : item,
+          );
+          if (!Array.isArray(state.draft.educations) || normalized.some((item, index) => item.level !== educations[index]?.level)) {
+            state.patch({ educations: normalized.length ? normalized : [{ level: 'Lisans', department: '' }] });
+          }
+          if (!Array.isArray(state.draft.kpssScores)) state.patch({ kpssScores: [] });
+        } finally {
+          state?.setHydrated(true);
         }
-        if (!Array.isArray(state.draft.kpssScores)) state.patch({ kpssScores: [] });
-        state.setHydrated(true);
       },
       partialize: (state) => ({ draft: state.draft, interactions: state.interactions, studied: state.studied }),
     },

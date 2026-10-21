@@ -1,7 +1,6 @@
 import '../global.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -11,29 +10,18 @@ import { useProfileStore } from '@/store/useProfileStore';
 
 export { ErrorBoundary } from 'expo-router';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.setOptions({ duration: 350, fade: true });
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
+setTimeout(() => {
+  SplashScreen.hideAsync().catch(() => undefined);
+}, 1200);
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
   useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  const ready = useAppStore((state) => state.ready);
-  const hydrated = useProfileStore((state) => state.hydrated);
-
-  useEffect(() => {
-    if (loaded && ready && hydrated) {
-      SplashScreen.hideAsync().catch(() => undefined);
-    }
-  }, [loaded, ready, hydrated]);
-
-  if (!loaded) return null;
+    SplashScreen.hideAsync().catch(() => undefined);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -45,7 +33,15 @@ export default function RootLayout() {
 }
 
 function ThemedStack() {
+  const router = useRouter();
+  const segments = useSegments();
+  const ready = useAppStore((state) => state.ready);
+  const completed = useProfileStore((state) => state.draft.onboardingCompleted);
   const dark = useAppStore((state) => state.colorScheme) === 'dark';
+
+  useEffect(() => {
+    if (ready && completed && segments[0] === '(onboarding)' && segments[1] === 'step1-personal') router.replace('/(tabs)');
+  }, [ready, completed, segments, router]);
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: dark ? '#102027' : '#F4F7F8' } }}>
       <Stack.Screen name="index" />
