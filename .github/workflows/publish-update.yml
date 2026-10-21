@@ -2,6 +2,14 @@ name: Publish app update
 
 on:
   workflow_dispatch:
+    inputs:
+      channel:
+        description: Güncellemenin gideceği kanal
+        type: choice
+        options:
+          - preview
+          - production
+        default: preview
 
 jobs:
   update:
@@ -21,4 +29,4 @@ jobs:
             echo "EXPO_TOKEN yok. Mağaza sürümü yayınlanmadı. JS güncellemesi atlandı."
             exit 0
           fi
-          npx eas-cli@latest update --channel production --non-interactive --environment production --message "update ${GITHUB_SHA}"
+          npx eas-cli@latest update --channel ${{ inputs.channel }} --non-interactive --environment ${{ inputs.channel }} --message "update ${GITHUB_SHA}"

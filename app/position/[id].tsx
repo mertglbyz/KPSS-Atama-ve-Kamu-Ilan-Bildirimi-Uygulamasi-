@@ -75,7 +75,7 @@ export default function PositionScreen() {
         </Card>
       ) : (
         <Card className="mt-3">
-          <Text className="font-semibold text-ink dark:text-white">Şart dökümü Pro'da</Text>
+          <Text className="font-semibold text-ink dark:text-white">Şart dökümü Pro’da</Text>
           <Text className="mt-1 text-sm text-muted dark:text-slate-300">Puan, bölüm, ehliyet ve belge şartları abonelikle açılır.</Text>
           <View className="mt-3">
             <Button label="Kilidi aç" onPress={() => router.push('/paywall')} />

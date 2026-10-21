@@ -1,8 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { Card, Screen, Title } from '@/components/ui';
-import { formatScore } from '@/lib/format';
-import { parseScore } from '@/lib/format';
+import { formatScore, parseScore } from '@/lib/format';
 import { useProfileStore } from '@/store/useProfileStore';
 
 const LINKS = [

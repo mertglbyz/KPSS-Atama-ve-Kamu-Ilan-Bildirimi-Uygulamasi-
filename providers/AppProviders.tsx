@@ -3,6 +3,7 @@ import { useColorScheme } from 'nativewind';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fromProfileRow, toProfileUpdate } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
+import { fetchPendingUpdate } from '@/lib/updates';
 import { useAppStore } from '@/store/useAppStore';
 import { useProfileStore } from '@/store/useProfileStore';
 
@@ -122,7 +123,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
       if (!useAppStore.getState().ready) openDemo();
     }, 8000);
     void boot();
+    const updateTimer = setTimeout(() => void fetchPendingUpdate(), 3000);
     return () => {
+      clearTimeout(updateTimer);
       clearTimeout(timer);
       clearTimeout(bootLimit);
       pending.forEach((timerId) => clearTimeout(timerId));

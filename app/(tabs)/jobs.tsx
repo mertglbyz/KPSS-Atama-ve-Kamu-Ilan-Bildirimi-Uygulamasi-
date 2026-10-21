@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { searchText } from '@/lib/input';
 import { CardActions, JobChips, JobNotice } from '@/components/JobFacts';
@@ -21,11 +21,13 @@ const SCOPES = [
 export default function JobsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ scope?: string }>();
-  const initial = SCOPES.some(([id]) => id === params.scope) ? (params.scope as (typeof SCOPES)[number][0]) : 'all';
-  const [scope, setScope] = useState<(typeof SCOPES)[number][0]>(initial);
-  useEffect(() => {
-    if (SCOPES.some(([id]) => id === params.scope)) setScope(params.scope as (typeof SCOPES)[number][0]);
-  }, [params.scope]);
+  const requested = SCOPES.some(([id]) => id === params.scope) ? (params.scope as (typeof SCOPES)[number][0]) : null;
+  const [scope, setScope] = useState<(typeof SCOPES)[number][0]>(requested ?? 'all');
+  const [seenScope, setSeenScope] = useState(requested);
+  if (requested !== seenScope) {
+    setSeenScope(requested);
+    if (requested) setScope(requested);
+  }
   const [query, setQuery] = useState('');
   const userId = useAppStore((state) => state.userId);
   const premium = useAppStore((state) => state.isPremium);
