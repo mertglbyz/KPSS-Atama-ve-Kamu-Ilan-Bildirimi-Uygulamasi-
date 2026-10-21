@@ -24,14 +24,13 @@ export default function RootLayout() {
 function ThemedStack() {
   const router = useRouter();
   const segments = useSegments();
-  const ready = useAppStore((state) => state.ready);
   const completed = useProfileStore((state) => state.draft.onboardingCompleted);
   const dark = useAppStore((state) => state.colorScheme) === 'dark';
 
   useEffect(() => {
     const route = segments.join('/');
-    if (ready && completed && route === '(onboarding)/step1-personal') router.replace('/(tabs)');
-  }, [ready, completed, segments, router]);
+    if (completed && route === '(onboarding)/step1-personal') router.replace('/(tabs)');
+  }, [completed, segments, router]);
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: dark ? '#102027' : '#F4F7F8' } }}>
       <Stack.Screen name="index" />
