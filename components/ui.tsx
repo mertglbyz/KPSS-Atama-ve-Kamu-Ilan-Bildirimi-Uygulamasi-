@@ -4,6 +4,7 @@ import { useColorScheme } from 'nativewind';
 import { ReactNode } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { integerText, nameText, scoreText } from '@/lib/input';
 
 const cardShadow: ViewStyle = {
   shadowColor: '#1A2332',
@@ -97,23 +98,37 @@ export function Field({
   value,
   onChangeText,
   placeholder,
-  keyboardType = 'default',
+  kind = 'text',
+  maxDigits = 3,
+  maxValue,
 }: {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
   placeholder?: string;
-  keyboardType?: 'default' | 'number-pad' | 'decimal-pad' | 'email-address';
+  kind?: 'text' | 'integer' | 'score';
+  maxDigits?: number;
+  maxValue?: number;
 }) {
+  const keyboardType = kind === 'integer' ? 'number-pad' : kind === 'score' ? 'decimal-pad' : 'default';
+  function change(next: string) {
+    if (kind === 'integer') onChangeText(integerText(next, maxDigits, maxValue));
+    else if (kind === 'score') onChangeText(scoreText(next));
+    else onChangeText(nameText(next));
+  }
   return (
     <View className="mb-3">
       <Text className="mb-1.5 text-sm font-semibold text-ink dark:text-slate-200">{label}</Text>
       <TextInput
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={change}
         placeholder={placeholder}
         placeholderTextColor="#A39888"
         keyboardType={keyboardType}
+        inputMode={kind === 'integer' ? 'numeric' : kind === 'score' ? 'decimal' : 'text'}
+        autoCapitalize={kind === 'text' ? 'words' : 'none'}
+        autoCorrect={false}
+        maxLength={kind === 'text' ? 32 : kind === 'score' ? 8 : maxDigits}
         className="rounded-2xl border border-line bg-white px-4 py-3.5 text-base text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"
       />
     </View>

@@ -1,13 +1,15 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { SelectField } from '@/components/SelectField';
 import { StepFrame } from '@/components/StepFrame';
 import { Choice, ErrorText, Field } from '@/components/ui';
 import { CITIES } from '@/constants/catalog';
+import { advance } from '@/lib/flow';
 import { useProfileStore } from '@/store/useProfileStore';
 
 export default function StepPersonal() {
   const router = useRouter();
+  const editing = Boolean(useLocalSearchParams<{ edit?: string }>().edit);
   const draft = useProfileStore((state) => state.draft);
   const patch = useProfileStore((state) => state.patch);
   const [error, setError] = useState<string | null>(null);
@@ -23,15 +25,15 @@ export default function StepPersonal() {
     if (!draft.gender) return setError('Cinsiyet seç.');
     if (!draft.city) return setError('İl seç.');
     setError(null);
-    router.push('/(onboarding)/step2-education');
+    void advance(router, '/(onboarding)/step2-education', editing);
   }
 
   return (
     <StepFrame step={1} title="Kişisel bilgiler" subtitle="Yaş, boy ve il; zabıta, güvenlik ve yerel işçi ilanlarında kullanılıyor." onNext={next}>
-      <Field label="Takma ad" value={draft.nickname} onChangeText={(nickname) => patch({ nickname })} placeholder="mertglbyz" />
-      <Field label="Yaş" value={draft.age} onChangeText={(ageValue) => patch({ age: ageValue })} keyboardType="number-pad" />
-      <Field label="Boy (cm)" value={draft.height} onChangeText={(heightValue) => patch({ height: heightValue })} keyboardType="number-pad" />
-      <Field label="Kilo (kg, isteğe bağlı)" value={draft.weight} onChangeText={(weightValue) => patch({ weight: weightValue })} keyboardType="number-pad" />
+      <Field label="Takma ad" value={draft.nickname} onChangeText={(nickname) => patch({ nickname })} placeholder="Mert" />
+      <Field label="Yaş" kind="integer" maxDigits={2} maxValue={70} value={draft.age} onChangeText={(ageValue) => patch({ age: ageValue })} />
+      <Field label="Boy (cm)" kind="integer" maxDigits={3} maxValue={220} value={draft.height} onChangeText={(heightValue) => patch({ height: heightValue })} />
+      <Field label="Kilo (kg, isteğe bağlı)" kind="integer" maxDigits={3} maxValue={220} value={draft.weight} onChangeText={(weightValue) => patch({ weight: weightValue })} />
       <Choice options={['Erkek', 'Kadın']} value={draft.gender} onChange={(gender) => patch({ gender: gender as 'Erkek' | 'Kadın' })} />
       <SelectField label="İl" value={draft.city} options={CITIES} onChange={(city) => patch({ city })} />
       <ErrorText text={error} />

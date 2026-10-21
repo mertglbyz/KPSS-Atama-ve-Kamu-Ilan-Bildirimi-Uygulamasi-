@@ -34,7 +34,7 @@ export function StepFrame({
       <Text className="mb-5 mt-2 text-sm leading-6 text-muted dark:text-slate-300">{subtitle}</Text>
       {children}
       <View className="mt-5 gap-2">
-        <Button label={nextLabel} onPress={onNext} />
+        <Button label={editing && nextLabel === 'Devam et' ? 'Kaydet' : nextLabel} onPress={onNext} />
         {step > 1 || editing ? <Button label="Geri" variant="ghost" onPress={() => router.back()} /> : null}
       </View>
     </Screen>

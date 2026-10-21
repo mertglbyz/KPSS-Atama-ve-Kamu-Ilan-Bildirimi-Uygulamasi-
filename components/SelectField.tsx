@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { listQuery } from '@/lib/input';
 
 export function SelectField({
   label,
@@ -37,7 +38,10 @@ export function SelectField({
           <Text className="mb-3 text-sm text-muted dark:text-slate-300">{filtered.length} sonuç</Text>
           <TextInput
             value={query}
-            onChangeText={setQuery}
+            onChangeText={(next) => setQuery(listQuery(next))}
+            autoCorrect={false}
+            autoCapitalize="words"
+            maxLength={60}
             placeholder="Bölüm veya alan ara"
             placeholderTextColor="#A39888"
             className="mb-3 rounded-2xl border border-line bg-white px-4 py-3.5 text-base text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"

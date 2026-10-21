@@ -27,8 +27,10 @@ export default function OnboardingResult() {
       <Card>
         <Text className="text-lg font-semibold leading-7 text-ink dark:text-white">{message}</Text>
       </Card>
-      <View className="h-4" />
-      <Button label="Uygun ilanları keşfet" onPress={() => router.push('/paywall')} />
+      <View className="mt-4 gap-3">
+        <Button label="Uygun ilanları keşfet" onPress={() => router.push('/paywall')} />
+        <Button label="İlanlara geç" variant="secondary" onPress={() => router.replace('/(tabs)')} />
+      </View>
     </Screen>
   );
 }

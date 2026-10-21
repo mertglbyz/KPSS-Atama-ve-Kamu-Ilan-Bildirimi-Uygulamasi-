@@ -19,6 +19,31 @@ function educationMatches(profile: MatchProfile, job: JobPosition): boolean {
   });
 }
 
+function foldKpssType(value: string): string {
+  const translated = value
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'i')
+    .replace(/Ş/g, 's')
+    .replace(/Ğ/g, 'g')
+    .replace(/Ü/g, 'u')
+    .replace(/Ö/g, 'o')
+    .replace(/Ç/g, 'c')
+    .replace(/ı/g, 'i')
+    .replace(/ş/g, 's')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .toLowerCase();
+  return translated.replace(/(^|[^a-z0-9])(kpss|grubu|a)(?![a-z0-9])/g, '$1').replace(/[^a-z0-9]/g, '');
+}
+
+function sameKpssType(left: string, right: string): boolean {
+  const jobType = foldKpssType(right);
+  if (!jobType) return true;
+  return foldKpssType(left) === jobType;
+}
+
 export function evaluatePosition(profile: MatchProfile, job: JobPosition): MatchResult {
   const gaps: string[] = [];
   if (job.status !== 'published') gaps.push('İlan yayında değil');
@@ -29,11 +54,11 @@ export function evaluatePosition(profile: MatchProfile, job: JobPosition): Match
       { type: profile.kpssType, score: profile.kpssScore },
       ...(profile.kpssScores ?? []),
     ];
-    const sameType = (left: string, right: string) => left.replace(/\s|kpss|grubu/gi, '').toLocaleLowerCase('tr-TR') === right.replace(/\s|kpss|grubu/gi, '').toLocaleLowerCase('tr-TR');
-    const fitting = scores.find((item) => !job.kpssType || sameType(item.type, job.kpssType));
+    const sameKind = scores.filter((item) => sameKpssType(item.type, job.kpssType ?? ''));
+    const fitting = sameKind.find((item) => item.score >= job.minKpssScore);
     if (!profile.hasKpss) gaps.push('KPSS puanı');
-    else if (!fitting) gaps.push(`${job.kpssType} puan türü`);
-    else if (fitting.score < job.minKpssScore) gaps.push(`En az ${job.minKpssScore} KPSS`);
+    else if (!sameKind.length) gaps.push(`${job.kpssType} puan türü`);
+    else if (!fitting) gaps.push(`En az ${job.minKpssScore} KPSS`);
   }
   if (profile.ydsScore < job.minYdsScore) gaps.push(`En az ${job.minYdsScore} YDS`);
   if (profile.age != null && (profile.age < job.minAge || profile.age > job.maxAge)) gaps.push('Yaş şartı');

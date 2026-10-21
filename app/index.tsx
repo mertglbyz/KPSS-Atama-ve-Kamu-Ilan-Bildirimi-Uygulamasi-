@@ -1,7 +1,7 @@
 import { Redirect } from 'expo-router';
-import { Text, View } from 'react-native';
-import { useProfileStore } from '@/store/useProfileStore';
+import { Image, Text, View } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
+import { useProfileStore } from '@/store/useProfileStore';
 
 export default function Gate() {
   const ready = useAppStore((state) => state.ready);
@@ -10,9 +10,9 @@ export default function Gate() {
 
   if (!ready || !hydrated) {
     return (
-      <View className="flex-1 items-center justify-center bg-canvas dark:bg-night">
-        <Text className="text-xs font-semibold tracking-[3px] text-brand-700 dark:text-brand-100">KPSS ATAMA</Text>
-        <Text className="mt-3 text-lg text-ink dark:text-white">Profilin hazırlanıyor</Text>
+      <View style={{ flex: 1, backgroundColor: '#143F4C', alignItems: 'center', justifyContent: 'center' }}>
+        <Image source={require('../assets/images/splash.png')} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+        <Text style={{ position: 'absolute', bottom: 48, color: '#D3E4E6', letterSpacing: 1, fontSize: 13 }}>Bağlanıyor</Text>
       </View>
     );
   }

@@ -233,6 +233,12 @@ export async function markNotificationRead(id: string): Promise<void> {
   await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id);
 }
 
+export async function deleteAccount(): Promise<void> {
+  if (!supabase || useAppStore.getState().mode !== 'live') return;
+  const { error } = await supabase.functions.invoke('delete-account');
+  if (error) throw error;
+}
+
 export async function upsertInteraction(userId: string, positionId: string, patch: Record<string, unknown>): Promise<void> {
   if (!supabase || positionId.startsWith('demo-')) return;
   const { error } = await supabase.from('user_job_interactions').upsert(

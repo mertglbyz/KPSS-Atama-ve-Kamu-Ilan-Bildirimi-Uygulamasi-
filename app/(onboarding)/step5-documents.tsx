@@ -42,7 +42,7 @@ export default function StepDocuments() {
 
   return (
     <StepFrame step={5} title="Belgeler ve SGK" subtitle="Sertifika ve prim günü, şartlı kadroları doğru elemek için kullanılır." onNext={next} nextLabel={pending ? 'Kaydediliyor' : 'Profili tamamla'}>
-      <Field label="SGK prim günü" value={draft.sgkPrimDays} onChangeText={(sgkPrimDays) => patch({ sgkPrimDays, hasSgkHistory: Number(sgkPrimDays) > 0 })} keyboardType="number-pad" />
+      <Field label="SGK prim günü" kind="integer" maxDigits={5} maxValue={20000} value={draft.sgkPrimDays} onChangeText={(sgkPrimDays) => patch({ sgkPrimDays, hasSgkHistory: Number(sgkPrimDays) > 0 })} />
       <Text className="mb-2 text-sm font-medium text-ink dark:text-slate-200">Sertifikalar</Text>
       <View className="mb-3 flex-row flex-wrap gap-2">
         {CERTIFICATES.map((certificate) => (

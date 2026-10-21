@@ -1,13 +1,15 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { StepFrame } from '@/components/StepFrame';
 import { Chip, Choice, ErrorText, ToggleRow } from '@/components/ui';
 import { LICENSE_CLASSES } from '@/constants/catalog';
+import { advance } from '@/lib/flow';
 import { useProfileStore } from '@/store/useProfileStore';
 
 export default function StepDetails() {
   const router = useRouter();
+  const editing = Boolean(useLocalSearchParams<{ edit?: string }>().edit);
   const draft = useProfileStore((state) => state.draft);
   const patch = useProfileStore((state) => state.patch);
   const toggleList = useProfileStore((state) => state.toggleList);
@@ -18,7 +20,7 @@ export default function StepDetails() {
       setError('Güvenlik kartının türünü seç.');
       return;
     }
-    router.push('/(onboarding)/step5-documents');
+    void advance(router, '/(onboarding)/step5-documents', editing);
   }
 
   return (

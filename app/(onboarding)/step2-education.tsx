@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SelectField } from '@/components/SelectField';
@@ -6,6 +6,7 @@ import { StepFrame } from '@/components/StepFrame';
 import { Button, ErrorText } from '@/components/ui';
 import { DEPARTMENTS } from '@/constants/catalog';
 import type { EducationLevel } from '@/types/domain';
+import { advance } from '@/lib/flow';
 import { useProfileStore } from '@/store/useProfileStore';
 
 const LEVELS: { id: EducationLevel; title: string; caption: string }[] = [
@@ -16,6 +17,7 @@ const LEVELS: { id: EducationLevel; title: string; caption: string }[] = [
 
 export default function StepEducation() {
   const router = useRouter();
+  const editing = Boolean(useLocalSearchParams<{ edit?: string }>().edit);
   const educations = useProfileStore((state) => state.draft.educations);
   const setEducation = useProfileStore((state) => state.setEducation);
   const addEducation = useProfileStore((state) => state.addEducation);
@@ -27,7 +29,7 @@ export default function StepEducation() {
       setError('Her eğitim satırında bölüm seç.');
       return;
     }
-    router.push('/(onboarding)/step3-exams');
+    void advance(router, '/(onboarding)/step3-exams', editing);
   }
 
   return (

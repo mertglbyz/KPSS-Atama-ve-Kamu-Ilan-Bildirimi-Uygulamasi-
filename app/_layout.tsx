@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { AppProviders } from '@/providers/AppProviders';
 import { useAppStore } from '@/store/useAppStore';
+import { useProfileStore } from '@/store/useProfileStore';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -23,9 +24,14 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
+  const ready = useAppStore((state) => state.ready);
+  const hydrated = useProfileStore((state) => state.hydrated);
+
   useEffect(() => {
-    if (loaded) SplashScreen.hideAsync();
-  }, [loaded]);
+    if (loaded && ready && hydrated) {
+      SplashScreen.hideAsync().catch(() => undefined);
+    }
+  }, [loaded, ready, hydrated]);
 
   if (!loaded) return null;
 
@@ -47,8 +53,6 @@ function ThemedStack() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
       <Stack.Screen name="position/[id]" />
-      <Stack.Screen name="legal/privacy" />
-      <Stack.Screen name="legal/terms" />
     </Stack>
   );
 }

@@ -76,4 +76,19 @@ if (blocked.matched || !blocked.gaps.some((gap) => gap.includes('90'))) {
   throw new Error('Düşük puan elenmedi');
 }
 
+const hukuk = evaluatePosition(
+  { ...profile, kpssType: 'Hukuk', kpssScore: 75 },
+  job({ kpssType: 'KPSS A Hukuk', minKpssScore: 70 }),
+);
+if (!hukuk.matched) throw new Error('A grubu Hukuk eşleşmedi');
+
+const notP10 = evaluatePosition({ ...profile, kpssType: 'P1', kpssScore: 80 }, job({ kpssType: 'P10', minKpssScore: 70 }));
+if (notP10.matched) throw new Error('P10, P1 ile eşleşmemeli');
+
+const secondary = evaluatePosition(
+  { ...profile, kpssScore: 60, kpssScores: [{ type: 'P1', score: 85 }] },
+  job({ kpssType: null, minKpssScore: 70 }),
+);
+if (!secondary.matched) throw new Error('Puan türü boşken ek puan kabul edilmedi');
+
 console.log('match checks ok');

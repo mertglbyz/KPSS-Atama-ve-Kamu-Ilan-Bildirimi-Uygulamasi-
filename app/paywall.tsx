@@ -2,10 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Button, ErrorText, Screen } from '@/components/ui';
 import { PLANS } from '@/constants/catalog';
+import { PRIVACY_URL, TERMS_URL } from '@/constants/legal';
 import { isSupabaseConfigured } from '@/lib/env';
 import { loadOfferings, purchaseProduct, restorePremium } from '@/lib/revenuecat';
 import { useAppStore } from '@/store/useAppStore';
@@ -98,7 +99,7 @@ export default function PaywallScreen() {
           Ödeme Apple veya Google hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse yenilenir.
         </Text>
         <View className="mt-5 flex-row flex-wrap items-center justify-center">
-          <Pressable accessibilityRole="link" onPress={() => router.push('/legal/terms')}>
+          <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(TERMS_URL)}>
             <Text className="text-xs text-muted dark:text-slate-300">Kullanım koşulları</Text>
           </Pressable>
           <Text className="px-2 text-xs text-muted dark:text-slate-300">·</Text>
@@ -115,7 +116,7 @@ export default function PaywallScreen() {
             <Text className="text-xs text-muted dark:text-slate-300">Satın alımları geri yükle</Text>
           </Pressable>
           <Text className="px-2 text-xs text-muted dark:text-slate-300">·</Text>
-          <Pressable accessibilityRole="link" onPress={() => router.push('/legal/privacy')}>
+          <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(PRIVACY_URL)}>
             <Text className="text-xs text-muted dark:text-slate-300">Gizlilik politikası</Text>
           </Pressable>
         </View>

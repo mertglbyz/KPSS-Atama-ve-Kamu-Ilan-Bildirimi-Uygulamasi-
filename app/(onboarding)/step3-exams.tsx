@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text } from 'react-native';
 import { StepFrame } from '@/components/StepFrame';
@@ -6,10 +6,12 @@ import { Choice, ErrorText, Field } from '@/components/ui';
 import { KPSS_TYPES } from '@/constants/catalog';
 import { parseScore } from '@/lib/format';
 import { highestEducation } from '@/lib/profile';
+import { advance } from '@/lib/flow';
 import { useProfileStore } from '@/store/useProfileStore';
 
 export default function StepExams() {
   const router = useRouter();
+  const editing = Boolean(useLocalSearchParams<{ edit?: string }>().edit);
   const draft = useProfileStore((state) => state.draft);
   const patch = useProfileStore((state) => state.patch);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export default function StepExams() {
     const ales = parseScore(draft.alesScore);
     if (draft.ydsScore && (yds == null || yds < 0 || yds > 100)) return setError('YDS puanını kontrol et.');
     if (draft.alesScore && (ales == null || ales < 0 || ales > 100)) return setError('ALES puanını kontrol et.');
-    router.push('/(onboarding)/step4-details');
+    void advance(router, '/(onboarding)/step4-details', editing);
   }
 
   return (
@@ -45,7 +47,7 @@ export default function StepExams() {
         <>
           <Text className="mb-2 text-sm font-medium text-ink dark:text-slate-200">Puan türü</Text>
           <Choice options={types} value={draft.kpssType} onChange={(kpssType) => patch({ kpssType })} />
-          <Field label="KPSS puanı" value={draft.kpssScore} onChangeText={(kpssScore) => patch({ kpssScore })} placeholder="81,1288" keyboardType="decimal-pad" />
+          <Field label="KPSS puanı" kind="score" value={draft.kpssScore} onChangeText={(kpssScore) => patch({ kpssScore })} placeholder="81,1288" />
           <Text className="mb-2 text-sm font-medium text-ink dark:text-slate-200">Varsa ikinci puanın</Text>
           <Text className="mb-2 text-xs leading-5 text-muted dark:text-slate-300">A grubu adayları Hukuk, İktisat, Maliye gibi alan puanını da ekleyebilir. İlan o puanı istiyorsa o puanla eşleşir.</Text>
           {(draft.kpssScores ?? []).map((item) => (
@@ -54,7 +56,7 @@ export default function StepExams() {
             </Pressable>
           ))}
           <Choice options={types} value={extraType} onChange={setExtraType} />
-          <Field label="Ek KPSS puanı" value={extraScore} onChangeText={setExtraScore} placeholder="75,2500" keyboardType="decimal-pad" />
+          <Field label="Ek KPSS puanı" kind="score" value={extraScore} onChangeText={setExtraScore} placeholder="75,2500" />
           <Pressable
             onPress={() => {
               const score = parseScore(extraScore);
@@ -68,8 +70,8 @@ export default function StepExams() {
           </Pressable>
         </>
       ) : null}
-      <Field label="YDS (isteğe bağlı)" value={draft.ydsScore} onChangeText={(ydsScore) => patch({ ydsScore })} keyboardType="decimal-pad" />
-      <Field label="ALES (isteğe bağlı)" value={draft.alesScore} onChangeText={(alesScore) => patch({ alesScore })} keyboardType="decimal-pad" />
+      <Field label="YDS (isteğe bağlı)" kind="score" value={draft.ydsScore} onChangeText={(ydsScore) => patch({ ydsScore })} />
+      <Field label="ALES (isteğe bağlı)" kind="score" value={draft.alesScore} onChangeText={(alesScore) => patch({ alesScore })} />
       <ErrorText text={error} />
     </StepFrame>
   );

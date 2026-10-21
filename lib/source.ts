@@ -35,7 +35,11 @@ function kamuilanTarget(title: string, institution: string, startDate?: string |
   let job = title;
   if (range) job = job.replace(range[0], ' ');
   if (institution && institution !== 'Kamu kurumu') {
-    const escaped = institution.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escaped = institution
+      .trim()
+      .split(/\s+/)
+      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('\\s+');
     job = job.replace(new RegExp(escaped, 'i'), ' ');
   }
   job = job.replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim().toLocaleUpperCase('tr-TR');

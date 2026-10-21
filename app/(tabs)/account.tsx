@@ -1,14 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Platform, Text, View } from 'react-native';
+import { Alert, Platform, Text, View } from 'react-native';
 import { Button, Card, Screen, Title, ToggleRow } from '@/components/ui';
-import { saveProfile } from '@/lib/data';
+import { deleteAccount, saveProfile } from '@/lib/data';
 import { emptyDraft } from '@/lib/profile';
 import { registerPushToken } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { useProfileStore } from '@/store/useProfileStore';
-import * as Notifications from 'expo-notifications';
 
 const PLAN_LABEL = { free: 'Ücretsiz', monthly: 'Aylık Pro', quarterly: '3 Aylık Pro', yearly: 'Yıllık Pro' };
 
@@ -27,9 +26,14 @@ export default function AccountScreen() {
   const [phoneOn, setPhoneOn] = useState(false);
 
   useEffect(() => {
-    if (Platform.OS === 'web') return;
-    void Notifications.getPermissionsAsync().then((permission) => setPhoneOn(permission.granted));
-  }, []);
+    if (Platform.OS === 'web' || mode !== 'live' || !userId || !supabase) return;
+    void supabase
+      .from('profiles')
+      .select('expo_push_token')
+      .eq('id', userId)
+      .maybeSingle()
+      .then(({ data }) => setPhoneOn(Boolean(data?.expo_push_token)));
+  }, [mode, userId]);
 
   async function persist(partial: Partial<typeof draft>) {
     const next = { ...draft, ...partial };
@@ -90,6 +94,43 @@ export default function AccountScreen() {
             if (mode === 'live' && userId) void saveProfile(userId, cleared);
             reset();
             router.replace('/(onboarding)/step1-personal');
+          }}
+        />
+        <Button
+          label="Hesabı ve veriyi sil"
+          variant="ghost"
+          onPress={() => {
+            Alert.alert('Hesabı sil', 'Profilin, eşleşmelerin ve bildirimlerin silinir. Bu işlem geri alınmaz.', [
+              { text: 'Vazgeç', style: 'cancel' },
+              {
+                text: 'Sil',
+                style: 'destructive',
+                onPress: () => {
+                  void (async () => {
+                    setMessage(null);
+                    try {
+                      if (mode === 'live') await deleteAccount();
+                      if (supabase) await supabase.auth.signOut();
+                      reset();
+                      const created = supabase ? await supabase.auth.signInAnonymously() : null;
+                      const session = created?.data.session;
+                      if (session) {
+                        useAppStore.getState().setReady({
+                          mode: 'live',
+                          userId: session.user.id,
+                          email: null,
+                          isPremium: false,
+                          plan: 'free',
+                        });
+                      }
+                      router.replace('/(onboarding)/step1-personal');
+                    } catch (caught) {
+                      setMessage(caught instanceof Error ? caught.message : 'Hesap silinemedi.');
+                    }
+                  })();
+                },
+              },
+            ]);
           }}
         />
       </View>

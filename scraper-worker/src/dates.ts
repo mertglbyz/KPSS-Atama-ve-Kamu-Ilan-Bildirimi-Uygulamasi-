@@ -25,7 +25,7 @@ function fold(value: string) {
 }
 
 export function datesFromTitle(title: string, now = new Date()): { start?: string; end?: string } {
-  const match = fold(title).match(/(\d{1,2})\s*(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)\s*[-–]\s*(\d{1,2})\s*(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)/);
+  const match = fold(title).match(/(\d{1,2})\s*(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)\s*[-–—]\s*(\d{1,2})\s*(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)/);
   if (!match) return {};
   const year = now.getFullYear();
   const start = new Date(Date.UTC(year, MONTHS[match[2]] - 1, Number(match[1])));

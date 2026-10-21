@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
+import { searchText } from '@/lib/input';
 import { CardActions, JobChips, JobNotice } from '@/components/JobFacts';
 import { openOfficialSource, sourceLabel } from '@/lib/source';
 import { Button, Card, Choice, Screen, Title } from '@/components/ui';
@@ -90,7 +91,9 @@ export default function JobsScreen() {
       <Title subtitle="Herkese açık ilan kartları. Pro abonelikte profiline uyan kadrolar da açılır.">İlanlar</Title>
       <TextInput
         value={query}
-        onChangeText={setQuery}
+        onChangeText={(next) => setQuery(searchText(next))}
+        autoCorrect={false}
+        maxLength={60}
         placeholder="Kurum veya unvan ara"
         placeholderTextColor="#94A3B8"
         className="mb-3 rounded-2xl border border-line bg-white px-4 py-3 text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"

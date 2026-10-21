@@ -75,7 +75,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
       }
 
       const userId = session.user.id;
-      const { data: row } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+      let { data: row } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+      if (!row) {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        const again = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+        row = again.data;
+      }
+      if (useAppStore.getState().ready && useAppStore.getState().mode === 'demo') return;
       const local = useProfileStore.getState().draft;
       let isPremium = Boolean(row?.is_premium);
       let plan: 'free' | 'monthly' | 'quarterly' | 'yearly' =
@@ -108,9 +114,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
       unsubscribe = () => listener.subscription.unsubscribe();
     }
 
+    const bootLimit = setTimeout(() => {
+      if (!useAppStore.getState().ready) openDemo();
+    }, 12000);
     void boot();
     return () => {
       clearTimeout(timer);
+      clearTimeout(bootLimit);
       pending.forEach((timerId) => clearTimeout(timerId));
       stopScheme();
       unsubscribe();
