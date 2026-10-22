@@ -60,10 +60,10 @@ Boy ve kiloyu santimetre ve kilogram olarak, kadın ve erkek için ayrı yaz. Ü
 Bu metin bir düzeltme veya revizyon ise notice_kind revised olsun. İlan veya kadro iptal edildiyse notice_kind cancelled olsun ve güncel kadro bırakma. Değilse active yaz.
 Bölüm adlarını standartlaştır. Lise mezuniyetini education_level olarak Ortaöğretim yaz. "Herhangi bir lisans/önlisans/ortaöğretim" ifadesinde is_general_degree true olsun.
 Bugün ${new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}. Tarihleri ISO 8601 yaz. Metinde yıl yoksa içinde bulunulan yılı kullan. 2024 ve öncesini yazma.
-Ek metin: ${text.slice(0, 20000)}`,
+Ek metin: ${text.slice(0, 60000)}`,
   ];
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.5-flash-lite',
     contents,
     config: { responseMimeType: 'application/json', responseSchema },
   });

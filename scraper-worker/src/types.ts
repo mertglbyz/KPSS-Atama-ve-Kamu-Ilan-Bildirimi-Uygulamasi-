@@ -5,6 +5,9 @@ export type DiscoveredAd = {
   institutionName: string;
   text: string;
   pdfUrl?: string;
+  pdf?: Buffer;
+  externalId?: string;
+  kiwi?: boolean;
 };
 
 export type ParsedPosition = {

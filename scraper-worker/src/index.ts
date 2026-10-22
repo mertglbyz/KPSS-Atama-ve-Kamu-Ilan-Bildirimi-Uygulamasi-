@@ -115,7 +115,8 @@ async function saveAd(ad: DiscoveredAd, options: { hash: string; existingId?: st
     notes.push('GEMINI_API_KEY yok, ayrıştırma atlandı.');
     return undefined;
   }
-  const pdf = ad.pdfUrl ? await downloadPdf(ad.pdfUrl) : undefined;
+  const attached = ad.pdf && ad.pdf.length <= 12 * 1024 * 1024 ? ad.pdf : undefined;
+  const pdf = attached ?? (ad.pdfUrl ? await downloadPdf(ad.pdfUrl) : undefined);
   const parsed = await parseAnnouncement(`${ad.institutionName}\n${ad.title}\n${ad.text}`, pdf);
   const kind = options.localKind === 'cancelled' || parsed.notice_kind === 'cancelled'
     ? 'cancelled'
@@ -254,7 +255,12 @@ async function main() {
     for (const ad of discovered) {
       try {
         const enriched = await enrichAd(ad);
-        const hash = createHash('sha256').update(`${enriched.title}\n${enriched.text}`).digest('hex');
+        const hash = createHash('sha256')
+          .update(enriched.title)
+          .update('\n')
+          .update(enriched.text)
+          .update(enriched.pdf ?? '')
+          .digest('hex');
         const localKind = noticeKind(enriched.title, enriched.text);
         const already = catalog.find((item) => item.source_url === enriched.sourceUrl)
           ?? catalog.find((item) => sameAnnouncement(
