@@ -3,7 +3,7 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { ReactNode } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View, type ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { integerText, nameText, scoreText } from '@/lib/input';
 
 const cardShadow: ViewStyle = {
@@ -15,12 +15,19 @@ const cardShadow: ViewStyle = {
 };
 
 export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
+  const insets = useSafeAreaInsets();
+  const bottom = Math.max(insets.bottom, 12);
   const body = scroll ? (
-    <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      className="flex-1"
+      contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottom + 20 }}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
       {children}
     </ScrollView>
   ) : (
-    <View className="flex-1 px-5">{children}</View>
+    <View className="flex-1 px-5" style={{ paddingBottom: bottom }}>{children}</View>
   );
   return (
     <SafeAreaView className="flex-1 bg-canvas dark:bg-night" edges={['top', 'left', 'right']}>
@@ -128,6 +135,8 @@ export function Field({
         inputMode={kind === 'integer' ? 'numeric' : kind === 'score' ? 'decimal' : 'text'}
         autoCapitalize={kind === 'text' ? 'words' : 'none'}
         autoCorrect={false}
+        allowFontScaling={false}
+        maxFontSizeMultiplier={1}
         maxLength={kind === 'text' ? 32 : kind === 'score' ? 8 : maxDigits}
         className="rounded-2xl border border-line bg-white px-4 py-3.5 text-base text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"
       />

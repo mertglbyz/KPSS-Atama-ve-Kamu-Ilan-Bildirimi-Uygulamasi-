@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
+import { Text } from 'react-native';
 import { SelectField } from '@/components/SelectField';
 import { StepFrame } from '@/components/StepFrame';
 import { Choice, ErrorText, Field } from '@/components/ui';
@@ -34,6 +35,7 @@ export default function StepPersonal() {
       <Field label="Yaş" kind="integer" maxDigits={2} maxValue={70} value={draft.age} onChangeText={(ageValue) => patch({ age: ageValue })} />
       <Field label="Boy (cm)" kind="integer" maxDigits={3} maxValue={220} value={draft.height} onChangeText={(heightValue) => patch({ height: heightValue })} />
       <Field label="Kilo (kg, isteğe bağlı)" kind="integer" maxDigits={3} maxValue={220} value={draft.weight} onChangeText={(weightValue) => patch({ weight: weightValue })} />
+      <Text className="mb-2 text-sm font-medium text-ink dark:text-slate-200">Cinsiyet</Text>
       <Choice options={['Erkek', 'Kadın']} value={draft.gender} onChange={(gender) => patch({ gender: gender as 'Erkek' | 'Kadın' })} />
       <SelectField label="İl" value={draft.city} options={CITIES} onChange={(city) => patch({ city })} />
       <ErrorText text={error} />

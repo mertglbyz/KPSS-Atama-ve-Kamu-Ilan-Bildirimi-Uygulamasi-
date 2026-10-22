@@ -90,10 +90,19 @@ export default function AccountScreen() {
           label="Profili sıfırla"
           variant="secondary"
           onPress={() => {
-            const cleared = emptyDraft();
-            if (mode === 'live' && userId) void saveProfile(userId, cleared);
-            reset();
-            router.replace('/(onboarding)/step1-personal');
+            Alert.alert('Profili sıfırla', 'Girdiğin bilgiler silinir ve kurulum baştan açılır.', [
+              { text: 'Vazgeç', style: 'cancel' },
+              {
+                text: 'Sıfırla',
+                style: 'destructive',
+                onPress: () => {
+                  const cleared = emptyDraft();
+                  if (mode === 'live' && userId) void saveProfile(userId, cleared);
+                  reset();
+                  router.replace('/(onboarding)/step1-personal');
+                },
+              },
+            ]);
           }}
         />
         <Button

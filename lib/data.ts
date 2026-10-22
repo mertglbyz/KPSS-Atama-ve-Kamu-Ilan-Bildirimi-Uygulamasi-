@@ -150,18 +150,9 @@ export async function fetchCards(scope: 'active' | 'archived'): Promise<PublicJo
   return (data ?? []).map((row: Record<string, unknown>) => mapCard(row)).filter((card: PublicJobCard) => (scope === 'archived' ? card.status === 'archived' : card.status === 'published'));
 }
 
-export async function fetchPosition(userId: string, positionId: string, draft: ProfileDraft, premium: boolean): Promise<JobPosition | null> {
+export async function fetchPosition(userId: string, positionId: string, _draft: ProfileDraft, _premium: boolean): Promise<JobPosition | null> {
   if (!supabase || useAppStore.getState().mode !== 'live') {
-    const job = DEMO_JOBS.find((item) => item.id === positionId) ?? null;
-    if (!job || premium) return job;
-    return {
-      ...job,
-      allowedDepartments: [],
-      minKpssScore: 0,
-      rawRequirementsText: null,
-      requiredCertificates: [],
-      requiredLicenses: [],
-    };
+    return DEMO_JOBS.find((item) => item.id === positionId) ?? null;
   }
   const { data, error } = await supabase.rpc('get_position_detail', { p_user_id: userId, p_position_id: positionId });
   if (error) throw error;

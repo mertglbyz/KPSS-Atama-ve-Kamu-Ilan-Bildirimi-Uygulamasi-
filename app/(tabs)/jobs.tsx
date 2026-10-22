@@ -95,6 +95,8 @@ export default function JobsScreen() {
         value={query}
         onChangeText={(next) => setQuery(searchText(next))}
         autoCorrect={false}
+        allowFontScaling={false}
+        maxFontSizeMultiplier={1}
         maxLength={60}
         placeholder="Kurum veya unvan ara"
         placeholderTextColor="#94A3B8"

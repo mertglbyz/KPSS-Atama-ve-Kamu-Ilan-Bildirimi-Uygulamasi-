@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { listQuery } from '@/lib/input';
 
 export function SelectField({
@@ -15,6 +16,7 @@ export function SelectField({
   onChange: (value: string) => void;
   placeholder?: string;
 }) {
+  const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
@@ -32,7 +34,7 @@ export function SelectField({
         <Text className={value ? 'text-base text-ink dark:text-white' : 'text-base text-slate-400'}>{value || placeholder}</Text>
       </Pressable>
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
-        <View className="flex-1 bg-canvas px-5 pt-14 dark:bg-slate-950">
+        <View className="flex-1 bg-canvas px-5 dark:bg-slate-950" style={{ paddingTop: Math.max(insets.top, 16), paddingBottom: Math.max(insets.bottom, 12) }}>
           <Text className="text-xs font-semibold tracking-[2px] text-brand-700 dark:text-brand-100">LİSTE</Text>
           <Text className="mb-1 text-2xl font-bold text-ink dark:text-white">{label}</Text>
           <Text className="mb-3 text-sm text-muted dark:text-slate-300">{filtered.length} sonuç</Text>
@@ -41,12 +43,15 @@ export function SelectField({
             onChangeText={(next) => setQuery(listQuery(next))}
             autoCorrect={false}
             autoCapitalize="words"
+            allowFontScaling={false}
+            maxFontSizeMultiplier={1}
             maxLength={60}
             placeholder="Bölüm veya alan ara"
             placeholderTextColor="#A39888"
             className="mb-3 rounded-2xl border border-line bg-white px-4 py-3.5 text-base text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           />
           <FlatList
+            style={{ flex: 1 }}
             data={filtered}
             keyExtractor={(item) => item}
             keyboardShouldPersistTaps="handled"

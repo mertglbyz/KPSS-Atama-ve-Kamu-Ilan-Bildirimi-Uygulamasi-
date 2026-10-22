@@ -25,15 +25,15 @@ export default function StepDocuments() {
       setError('SGK prim gününü kontrol et.');
       return;
     }
-    if (!userId) return;
     setPending(true);
     const returnToProfile = draft.onboardingCompleted || Boolean(params.edit);
     const nextDraft = { ...draft, onboardingCompleted: true, sgkPrimDays: String(days || '') };
-    patch({ onboardingCompleted: true });
+    patch({ onboardingCompleted: true, sgkPrimDays: nextDraft.sgkPrimDays });
     try {
-      if (mode === 'live') await saveProfile(userId, nextDraft);
+      if (mode === 'live' && userId) await saveProfile(userId, nextDraft);
       router.replace(returnToProfile ? '/(tabs)/profile' : '/(onboarding)/result');
     } catch (caught) {
+      patch({ onboardingCompleted: draft.onboardingCompleted });
       setError(caught instanceof Error ? caught.message : 'Profil kaydedilemedi');
     } finally {
       setPending(false);
