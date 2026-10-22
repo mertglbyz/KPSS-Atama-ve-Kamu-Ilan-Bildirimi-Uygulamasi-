@@ -1,3 +1,4 @@
+import { certificateCovers } from './certificates';
 import { isToday, isWithin48Hours } from './format';
 import type { JobPosition, MatchProfile, MatchSummary } from '../types/domain';
 
@@ -76,7 +77,9 @@ export function evaluatePosition(profile: MatchProfile, job: JobPosition): Match
   if (job.requiresSecurityCard && !profile.hasSecurityCard) gaps.push('Güvenlik görevlisi kartı');
   if (job.requiresDisability && !profile.isDisabled) gaps.push('Engelli kadrosu');
   if (profile.sgkPrimDays < job.minSgkDays) gaps.push(`${job.minSgkDays} SGK günü`);
-  const missingCertificates = job.requiredCertificates.filter((item) => !profile.certificates.includes(item));
+  const missingCertificates = job.requiredCertificates.filter(
+    (required) => !profile.certificates.some((owned) => certificateCovers(owned, required)),
+  );
   if (missingCertificates.length) gaps.push(missingCertificates.join(', '));
   if (
     job.cities.length > 0 &&

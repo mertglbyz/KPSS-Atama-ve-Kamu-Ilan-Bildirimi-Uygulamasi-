@@ -1,3 +1,4 @@
+import '@/lib/appearance';
 import '@/lib/lock-font-scale';
 import '@/lib/boot-splash';
 import '../global.css';

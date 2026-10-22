@@ -1,8 +1,19 @@
 import * as SplashScreen from 'expo-splash-screen';
 
 try {
-  void SplashScreen.preventAutoHideAsync?.().catch(() => {});
-  SplashScreen.setOptions?.({ duration: 450, fade: true });
+  void SplashScreen.preventAutoHideAsync().catch(() => {});
 } catch {
-  // Web ve eski kabuklarda splash denetimi yok sayılır.
+  // Native açılış bu kabukta yoksa JavaScript ekranı kullanılır.
+}
+
+let hidden = false;
+
+export function hideNativeSplash() {
+  if (hidden) return;
+  hidden = true;
+  try {
+    SplashScreen.hide();
+  } catch {
+    hidden = false;
+  }
 }

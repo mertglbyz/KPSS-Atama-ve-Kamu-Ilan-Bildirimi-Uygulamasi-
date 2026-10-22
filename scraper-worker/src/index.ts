@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { parseAnnouncement } from './gemini';
 import { fingerprint, sameAnnouncement } from './identity';
 import { datesFromTitle } from './dates';
+import { canonicalCertificates } from './certificates';
 import { noticeKind } from './notices';
 import { discoverIlanGov, discoverKamuilan, discoverKariyerKapisi, discoverYerelYonetimler, downloadPdf, enrichAd } from './sources';
 import type { DiscoveredAd, ParsedPosition } from './types';
@@ -186,7 +187,7 @@ async function saveAd(ad: DiscoveredAd, options: { hash: string; existingId?: st
     requires_security_card: position.requires_security_card ?? false,
     requires_disability: position.requires_disability ?? false,
     min_sgk_days: position.min_sgk_days ?? 0,
-    required_certificates: position.required_certificates ?? [],
+    required_certificates: canonicalCertificates(position.required_certificates),
     raw_requirements_text: position.raw_requirements_text ?? null,
   }));
   let positionWrite = await supabase.from('job_positions').insert(rows).select('id, position_title');

@@ -1,5 +1,6 @@
 import './load-env';
 import { GoogleGenAI, Type } from '@google/genai';
+import { CERTIFICATES } from './certificates';
 import type { ParsedAnnouncement } from './types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -59,6 +60,7 @@ KPSS türünü ilandaki gibi yaz: P1, P2, P3, P93, P94 veya A grubu alan adı (H
 Boy ve kiloyu santimetre ve kilogram olarak, kadın ve erkek için ayrı yaz. Üst sınır varsa max alanlarını doldur.
 Bu metin bir düzeltme veya revizyon ise notice_kind revised olsun. İlan veya kadro iptal edildiyse notice_kind cancelled olsun ve güncel kadro bırakma. Değilse active yaz.
 Bölüm adlarını standartlaştır. Lise mezuniyetini education_level olarak Ortaöğretim yaz. "Herhangi bir lisans/önlisans/ortaöğretim" ifadesinde is_general_degree true olsun.
+required_certificates alanına yalnızca ilanda açıkça istenen belgeleri yaz. Adı şu listeden seç: ${CERTIFICATES.join(', ')}. Listede yoksa belgeyi ekleme. Ehliyet, KPSS ve YDS bu listeye girmez.
 Bugün ${new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}. Tarihleri ISO 8601 yaz. Metinde yıl yoksa içinde bulunulan yılı kullan. 2024 ve öncesini yazma.
 Ek metin: ${text.slice(0, 60000)}`,
   ];

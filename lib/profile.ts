@@ -1,4 +1,5 @@
 import type { EducationLevel, MatchProfile, ProfileDraft } from '@/types/domain';
+import { normalizeCertificateList } from '@/lib/certificates';
 import { parseScore } from '@/lib/format';
 
 const LEVEL_RANK: Record<EducationLevel, number> = { Ortaöğretim: 1, Önlisans: 2, Lisans: 3 };
@@ -148,7 +149,7 @@ export function fromProfileRow(row: Record<string, unknown>): ProfileDraft {
     isStudent: Boolean(row.is_student),
     hasSgkHistory: Boolean(row.has_sgk_history),
     sgkPrimDays: row.sgk_prim_days ? String(row.sgk_prim_days) : '',
-    certificates: Array.isArray(row.certificates) ? row.certificates.map(String) : [],
+    certificates: normalizeCertificateList(Array.isArray(row.certificates) ? row.certificates.map(String) : []),
     onboardingCompleted: Boolean(row.onboarding_completed),
     notifyNewJobs: row.notify_new_jobs !== false,
     notifyDeadline: row.notify_deadline !== false,

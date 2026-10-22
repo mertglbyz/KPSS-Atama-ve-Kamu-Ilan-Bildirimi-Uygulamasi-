@@ -20,8 +20,24 @@ export function StepFrame({
 }) {
   const router = useRouter();
   const editing = Boolean(useLocalSearchParams<{ edit?: string }>().edit);
+  const forwardLabel = editing && nextLabel === 'Devam et' ? 'Kaydet' : nextLabel;
   return (
-    <Screen>
+    <Screen
+      footer={
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <Button
+              label="Geri"
+              variant="secondary"
+              onPress={() => (step === 1 && !editing ? router.replace('/(onboarding)/welcome') : router.back())}
+            />
+          </View>
+          <View className="flex-1">
+            <Button label={forwardLabel} onPress={onNext} />
+          </View>
+        </View>
+      }
+    >
       <View className="mt-2 flex-row items-center justify-between">
         <Text className="text-xs font-semibold tracking-[2px] text-brand-700 dark:text-brand-100">ADIM {step} / 5</Text>
         <View className="flex-row gap-1.5">
@@ -33,10 +49,6 @@ export function StepFrame({
       <Text className="mt-4 text-3xl font-bold text-ink dark:text-white">{title}</Text>
       <Text className="mb-5 mt-2 text-sm leading-6 text-muted dark:text-slate-300">{subtitle}</Text>
       {children}
-      <View className="mt-5 gap-2">
-        <Button label={editing && nextLabel === 'Devam et' ? 'Kaydet' : nextLabel} onPress={onNext} />
-        {step > 1 || editing ? <Button label="Geri" variant="ghost" onPress={() => router.back()} /> : null}
-      </View>
     </Screen>
   );
 }

@@ -24,11 +24,15 @@ export default function StepEducation() {
   const removeEducation = useProfileStore((state) => state.removeEducation);
   const [error, setError] = useState<string | null>(null);
 
+  const [checked, setChecked] = useState(false);
+
   function next() {
+    setChecked(true);
     if (educations.some((item) => !item.department)) {
       setError('Her eğitim satırında bölüm seç.');
       return;
     }
+    setError(null);
     void advance(router, '/(onboarding)/step3-exams', editing);
   }
 
@@ -62,6 +66,7 @@ export default function StepEducation() {
               placeholder="Bölümünü ara"
               onChange={(department) => setEducation(index, { level, department })}
             />
+            {checked && !education.department ? <ErrorText text="Bölüm seçmeden devam edemezsin." /> : null}
             {educations.length > 1 ? <Button label="Bu eğitimi sil" variant="ghost" onPress={() => removeEducation(index)} /> : null}
           </View>
         );

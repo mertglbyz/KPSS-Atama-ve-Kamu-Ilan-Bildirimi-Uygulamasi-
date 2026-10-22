@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColorScheme } from 'nativewind';
 import { listQuery } from '@/lib/input';
 
 export function SelectField({
@@ -17,6 +19,7 @@ export function SelectField({
   placeholder?: string;
 }) {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
@@ -35,26 +38,39 @@ export function SelectField({
       </Pressable>
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
         <View className="flex-1 bg-canvas px-5 dark:bg-slate-950" style={{ paddingTop: Math.max(insets.top, 16), paddingBottom: Math.max(insets.bottom, 12) }}>
-          <Text className="text-xs font-semibold tracking-[2px] text-brand-700 dark:text-brand-100">LİSTE</Text>
-          <Text className="mb-1 text-2xl font-bold text-ink dark:text-white">{label}</Text>
-          <Text className="mb-3 text-sm text-muted dark:text-slate-300">{filtered.length} sonuç</Text>
-          <TextInput
-            value={query}
-            onChangeText={(next) => setQuery(listQuery(next))}
-            autoCorrect={false}
-            autoCapitalize="words"
-            allowFontScaling={false}
-            maxFontSizeMultiplier={1}
-            maxLength={60}
-            placeholder="Bölüm veya alan ara"
-            placeholderTextColor="#A39888"
-            className="mb-3 rounded-2xl border border-line bg-white px-4 py-3.5 text-base text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-          />
+        <View className="mb-3 flex-row items-center">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Geri"
+            onPress={() => setOpen(false)}
+            className="mr-3 h-11 w-11 items-center justify-center rounded-full border border-line bg-white dark:border-slate-700 dark:bg-slate-900"
+          >
+            <ChevronLeft color={colorScheme === 'dark' ? '#F4F7F8' : '#102A32'} size={20} strokeWidth={2.4} />
+          </Pressable>
+          <View className="flex-1">
+            <Text className="text-xs font-semibold tracking-[2px] text-brand-700 dark:text-brand-100">LİSTE</Text>
+            <Text className="text-2xl font-bold text-ink dark:text-white">{label}</Text>
+          </View>
+        </View>
+        <Text className="mb-3 text-sm text-muted dark:text-slate-300">{filtered.length} sonuç</Text>
+        <TextInput
+          value={query}
+          onChangeText={(next) => setQuery(listQuery(next))}
+          autoCorrect={false}
+          autoCapitalize="words"
+          allowFontScaling={false}
+          maxFontSizeMultiplier={1}
+          maxLength={60}
+          placeholder={`${label} ara`}
+          placeholderTextColor="#A39888"
+          className="mb-3 rounded-2xl border border-line bg-white px-4 text-base text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          style={{ height: 52, fontSize: 16, paddingVertical: 0 }}
+        />
           <FlatList
             style={{ flex: 1 }}
             data={filtered}
             keyExtractor={(item) => item}
-            keyboardShouldPersistTaps="handled"
+            keyboardShouldPersistTaps="always"
             renderItem={({ item }) => {
               const selected = item === value;
               return (
@@ -72,9 +88,6 @@ export function SelectField({
               );
             }}
           />
-          <Pressable accessibilityRole="button" onPress={() => setOpen(false)} className="my-3 items-center py-3">
-            <Text className="font-semibold text-brand-700 dark:text-brand-100">Kapat</Text>
-          </Pressable>
         </View>
       </Modal>
     </View>

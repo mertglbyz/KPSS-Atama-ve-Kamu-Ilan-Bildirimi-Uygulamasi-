@@ -1,6 +1,7 @@
 import type { EducationLevel } from '@/types/domain';
 
 export { DEPARTMENTS } from '@/constants/departments';
+export { CERTIFICATES, CERTIFICATE_GROUPS } from '@/lib/certificates';
 
 export const CITIES = [
   'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya', 'Artvin', 'Aydın', 'Balıkesir',
@@ -14,20 +15,6 @@ export const CITIES = [
 ] as const;
 
 export const LICENSE_CLASSES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'M', 'T'] as const;
-
-export const CERTIFICATES = [
-  'Bilgisayar İşletmenliği',
-  'Kalorifer Ateşçiliği',
-  'İlk Yardım',
-  'SRC1',
-  'SRC2',
-  'SRC3',
-  'SRC4',
-  'Psikoteknik',
-  'Hijyen',
-  'İş Güvenliği',
-  'Aşçılık',
-] as const;
 
 export const KPSS_TYPES: Record<EducationLevel, string[]> = {
   Ortaöğretim: ['P94'],

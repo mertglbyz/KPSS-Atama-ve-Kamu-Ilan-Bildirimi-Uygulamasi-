@@ -43,17 +43,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
     const timer = setTimeout(() => {
       if (!useProfileStore.getState().hydrated) useProfileStore.getState().setHydrated(true);
     }, 500);
-    const pending = new Set<ReturnType<typeof setTimeout>>();
     const applyScheme = (scheme: 'light' | 'dark') => {
-      const timerId = setTimeout(() => {
-        pending.delete(timerId);
-        try {
-          setColorScheme(scheme);
-        } catch {
-          // Tema uygulanamazsa açılış yine sürer.
-        }
-      }, 0);
-      pending.add(timerId);
+      try {
+        setColorScheme(scheme);
+      } catch {
+        // Tema uygulanamazsa açılış yine sürer.
+      }
     };
     applyScheme(useAppStore.getState().colorScheme);
     const stopScheme = useAppStore.subscribe((state, previous) => {
@@ -128,7 +123,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
       clearTimeout(updateTimer);
       clearTimeout(timer);
       clearTimeout(bootLimit);
-      pending.forEach((timerId) => clearTimeout(timerId));
       stopScheme();
       unsubscribe();
     };

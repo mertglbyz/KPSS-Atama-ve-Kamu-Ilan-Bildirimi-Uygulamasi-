@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { ReactNode } from 'react';
-import { Pressable, ScrollView, Switch, Text, TextInput, View, type ViewStyle } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View, type ViewStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { integerText, nameText, scoreText } from '@/lib/input';
 
@@ -14,14 +14,24 @@ const cardShadow: ViewStyle = {
   elevation: 2,
 };
 
-export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
+const inputStyle = StyleSheet.create({
+  box: {
+    height: 52,
+    fontSize: 16,
+    paddingVertical: 0,
+    textAlignVertical: 'center',
+  },
+}).box;
+
+export function Screen({ children, footer, scroll = true }: { children: ReactNode; footer?: ReactNode; scroll?: boolean }) {
   const insets = useSafeAreaInsets();
   const bottom = Math.max(insets.bottom, 12);
   const body = scroll ? (
     <ScrollView
       className="flex-1"
-      contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottom + 20 }}
-      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: footer ? 16 : bottom + 20 }}
+      keyboardShouldPersistTaps="always"
+      keyboardDismissMode="none"
       showsVerticalScrollIndicator={false}
     >
       {children}
@@ -31,7 +41,12 @@ export function Screen({ children, scroll = true }: { children: ReactNode; scrol
   );
   return (
     <SafeAreaView className="flex-1 bg-canvas dark:bg-night" edges={['top', 'left', 'right']}>
-      <View className="mx-auto w-full max-w-[480px] flex-1">{body}</View>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View className="mx-auto w-full max-w-[480px] flex-1">
+          {body}
+          {footer ? <View style={{ paddingHorizontal: 20, paddingBottom: bottom }}>{footer}</View> : null}
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -108,6 +123,8 @@ export function Field({
   kind = 'text',
   maxDigits = 3,
   maxValue,
+  hint,
+  error,
 }: {
   label: string;
   value: string;
@@ -116,6 +133,8 @@ export function Field({
   kind?: 'text' | 'integer' | 'score';
   maxDigits?: number;
   maxValue?: number;
+  hint?: string;
+  error?: string | null;
 }) {
   const keyboardType = kind === 'integer' ? 'number-pad' : kind === 'score' ? 'decimal-pad' : 'default';
   function change(next: string) {
@@ -138,8 +157,10 @@ export function Field({
         allowFontScaling={false}
         maxFontSizeMultiplier={1}
         maxLength={kind === 'text' ? 32 : kind === 'score' ? 8 : maxDigits}
-        className="rounded-2xl border border-line bg-white px-4 py-3.5 text-base text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+        style={inputStyle}
+        className={`rounded-2xl border bg-white px-4 text-ink dark:bg-slate-900 dark:text-white ${error ? 'border-red-600' : 'border-line dark:border-slate-700'}`}
       />
+      {error ? <Text className="mt-1.5 text-sm leading-5 text-red-700">{error}</Text> : hint ? <Text className="mt-1.5 text-xs leading-4 text-muted dark:text-slate-300">{hint}</Text> : null}
     </View>
   );
 }

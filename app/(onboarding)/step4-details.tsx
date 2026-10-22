@@ -37,7 +37,7 @@ export default function StepDetails() {
         <Choice options={['Silahsız', 'Silahlı']} value={draft.securityCardType} onChange={(securityCardType) => patch({ securityCardType: securityCardType as 'Silahsız' | 'Silahlı' })} />
       ) : null}
       <ToggleRow label="Öğrencilik durumu" value={draft.isStudent} onValueChange={(isStudent) => patch({ isStudent })} />
-      <ToggleRow label="Sigortalı çalışma geçmişi" detail="Prim günü şartlı ilanlar için" value={draft.hasSgkHistory} onValueChange={(hasSgkHistory) => patch({ hasSgkHistory })} />
+      <ToggleRow label="Sigortalı çalışma geçmişi" detail="Açıksa bir sonraki adımda prim günü sorulur" value={draft.hasSgkHistory} onValueChange={(hasSgkHistory) => patch({ hasSgkHistory, sgkPrimDays: hasSgkHistory ? draft.sgkPrimDays : '' })} />
       <ErrorText text={error} />
     </StepFrame>
   );
