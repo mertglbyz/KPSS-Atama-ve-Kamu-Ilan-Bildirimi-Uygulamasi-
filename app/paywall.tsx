@@ -1,10 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { X } from 'lucide-react-native';
+import { Bell, Check, Clock, Crown, ShieldCheck, SlidersHorizontal, X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Button, ErrorText, Screen } from '@/components/ui';
+import {
+  ActivityIndicator,
+  Linking,
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ErrorText } from '@/components/ui';
 import { PLANS } from '@/constants/catalog';
 import { PRIVACY_URL, TERMS_URL } from '@/constants/legal';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -12,34 +20,79 @@ import { loadOfferings, purchaseProduct, restorePremium } from '@/lib/revenuecat
 import { useAppStore } from '@/store/useAppStore';
 
 const BENEFITS = [
-  'Profilinle eşleşen memur, sözleşmeli ve işçi ilanları',
-  'Yeni ilan yayınlandığında anlık bildirim',
-  'Son 48 saat başvuru bitiş hatırlatıcıları',
-  'Detaylı rakip analizi ve taban puan istatistikleri',
-];
+  {
+    icon: Bell,
+    title: 'Eşleşen ilanlar',
+    desc: 'Memur, sözleşmeli ve işçi kadroları profiline göre ayrılır.',
+  },
+  {
+    icon: Clock,
+    title: 'Bitiş hatırlatıcısı',
+    desc: 'Son 48 saatte kapanan başvurular tek listede durur.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Şart elemesi',
+    desc: 'Yaş, boy, ehliyet ve belge uymayan kadro listeden çıkar.',
+  },
+  {
+    icon: SlidersHorizontal,
+    title: 'Rakip analizi',
+    desc: 'Taban puan, sıralama ve kontenjan ayrıntısı açılır.',
+  },
+] as const;
 
 export default function PaywallScreen() {
   const router = useRouter();
+  const { height } = useWindowDimensions();
+  const isSmallScreen = height < 760;
+
   const mode = useAppStore((state) => state.mode);
+  const isPremium = useAppStore((state) => state.isPremium);
+  const currentPlan = useAppStore((state) => state.plan);
   const setPremium = useAppStore((state) => state.setPremium);
   const setDemoPremium = useAppStore((state) => state.setDemoPremium);
-  const offerings = useQuery({ queryKey: ['offerings'], queryFn: loadOfferings });
-  const [selected, setSelected] = useState<(typeof PLANS)[number]['id']>('yearly');
-  const [error, setError] = useState<string | null>(null);
+
+  const [selectedId, setSelectedId] = useState<'yearly' | 'quarterly' | 'monthly'>(
+    currentPlan !== 'free' ? currentPlan : 'yearly'
+  );
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useQuery({
+    queryKey: ['offerings'],
+    queryFn: loadOfferings,
+  });
+
+  const selectedPlan = PLANS.find((p) => p.id === selectedId) ?? PLANS[0];
+
+  function closePaywall() {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  }
 
   async function buy() {
-    const plan = PLANS.find((item) => item.id === selected)!;
-    setPending(true);
     setError(null);
+    setPending(true);
     try {
-      const active = await purchaseProduct(plan.productId);
-      if (active) {
-        setPremium(true, plan.id);
-        router.replace('/(tabs)/jobs');
+      if (!isSupabaseConfigured || mode === 'demo') {
+        setDemoPremium(true);
+        setPremium(true, selectedPlan.id);
+        closePaywall();
+        return;
       }
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Satın alma tamamlanmadı');
+      const active = await purchaseProduct(selectedPlan.productId);
+      if (active) {
+        setPremium(true, selectedPlan.id);
+        closePaywall();
+      } else {
+        setError('Satın alma işlemi tamamlanamadı.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ödeme sırasında bir sorun oluştu.');
     } finally {
       setPending(false);
     }
@@ -47,88 +100,231 @@ export default function PaywallScreen() {
 
   async function restore() {
     setError(null);
-    const active = await restorePremium();
-    if (active) {
-      setPremium(true);
-      router.replace('/(tabs)');
-    } else setError('Aktif abonelik bulunamadı.');
+    setPending(true);
+    try {
+      if (!isSupabaseConfigured || mode === 'demo') {
+        setDemoPremium(true);
+        setPremium(true, 'yearly');
+        closePaywall();
+        return;
+      }
+      const active = await restorePremium();
+      if (active) {
+        setPremium(true, 'yearly');
+        closePaywall();
+      } else {
+        setError('Bu hesaba tanımlı aktif bir abonelik bulunamadı.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Geri yükleme başarısız oldu.');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  function switchToFree() {
+    setDemoPremium(false);
+    setPremium(false, 'free');
+    closePaywall();
   }
 
   return (
-    <Screen>
-      <Animated.View entering={FadeInDown.duration(320)}>
-        <View className="overflow-hidden rounded-3xl bg-brand-700 px-4 pb-4 pt-3">
+    <SafeAreaView className="flex-1 bg-[#133B47]" edges={['top']}>
+      <View className="px-5 pb-3 pt-1.5">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-1.5 rounded-full bg-white/15 px-3 py-1">
+            <Crown size={13} color="#FDE68A" />
+            <Text className="text-[11px] font-bold tracking-wider text-amber-200">
+              {isPremium ? 'AKTİF PRO ÜYELİK' : 'KPSS ATAMA PRO'}
+            </Text>
+          </View>
+
           <Pressable
+            onPress={closePaywall}
+            hitSlop={12}
+            className="h-8 w-8 items-center justify-center rounded-full bg-white/15 active:opacity-70"
             accessibilityRole="button"
             accessibilityLabel="Kapat"
-            hitSlop={10}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
-            className="h-8 w-8 items-center justify-center self-end rounded-full border border-white/40"
           >
-            <X color="#F4F7F8" size={16} strokeWidth={2.25} />
+            <X size={18} color="#FFFFFF" />
           </Pressable>
-          <Text className="text-center text-2xl font-bold leading-7 text-white">Profiline uygun ilanları kaçırma</Text>
-          <View className="mt-3 gap-1.5">
-            {BENEFITS.map((item) => (
-              <View key={item} className="flex-row items-start gap-2">
-                <Text className="text-sm leading-5 text-white">•</Text>
-                <Text className="flex-1 text-[13px] leading-5 text-white/95">{item}</Text>
-              </View>
-            ))}
-          </View>
         </View>
-        <View className="mt-3">
-          {PLANS.map((plan) => {
-            const storePrice = offerings.data?.find((item) => item.product.identifier === plan.productId)?.product.priceString;
-            const active = selected === plan.id;
-            return (
-              <Pressable
-                key={plan.id}
-                accessibilityRole="button"
-                onPress={() => setSelected(plan.id)}
-                className={`mb-2 rounded-2xl border px-3.5 py-2.5 ${active ? 'border-brand-700 bg-brand-50 dark:bg-slate-800' : 'border-line bg-white dark:border-slate-800 dark:bg-slate-900'}`}
-              >
-                <View className="flex-row items-center justify-between gap-2">
-                  <Text className="text-base font-bold text-ink dark:text-white">{plan.title}</Text>
-                  {plan.badge ? <Text className="rounded-full bg-brand-700 px-2 py-0.5 text-[11px] font-semibold text-white">{plan.badge}</Text> : null}
-                </View>
-                <Text className="text-sm font-semibold text-brand-700 dark:text-brand-100">{storePrice ?? plan.price}</Text>
-                <Text className="text-xs text-muted dark:text-slate-300">{plan.monthly} · {plan.note}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <ErrorText text={error} />
-        <Button label={pending ? 'İşleniyor' : 'Devam et'} onPress={buy} disabled={pending} />
-        {mode === 'demo' || !isSupabaseConfigured ? (
-          <View className="mt-2">
-            <Button
-              label="Örnek modda Pro arayüzünü önizle"
-              variant="secondary"
-              onPress={() => {
-                setDemoPremium(true);
-                router.replace('/(tabs)/jobs');
-              }}
-            />
-          </View>
-        ) : null}
-        <Text className="mt-3 px-1 text-center text-[11px] leading-4 text-muted dark:text-slate-300">
-          Ödeme Apple veya Google hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse yenilenir.
+
+        <Text
+          className={`mt-2 text-center font-extrabold text-white ${
+            isSmallScreen ? 'text-lg leading-6' : 'text-xl leading-7'
+          }`}
+        >
+          Profiline uygun ilanları kaçırma
         </Text>
-        <View className="mt-3 flex-row flex-wrap items-center justify-center gap-y-1">
-          <Pressable accessibilityRole="link" hitSlop={8} onPress={() => void Linking.openURL(TERMS_URL)}>
-            <Text className="text-[11px] text-muted dark:text-slate-300">Kullanım koşulları</Text>
+        <Text className="mt-0.5 text-center text-xs leading-4 text-white/80">
+          Eşleşen kadrolar, bitiş hatırlatıcısı ve şart elemesi tek yerde.
+        </Text>
+      </View>
+
+      <SafeAreaView
+        className="flex-1 justify-between rounded-t-[28px] bg-white px-4 pt-3.5"
+        edges={['bottom']}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          contentContainerStyle={{ paddingBottom: 6 }}
+        >
+          <View className="flex-row flex-wrap justify-between gap-y-2">
+            {BENEFITS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <View
+                  key={item.title}
+                  className="w-[48.8%] rounded-2xl border border-[#E6ECEF] bg-[#F8FAFB] p-2.5"
+                >
+                  <View className="flex-row items-center gap-2">
+                    <View className="h-6 w-6 items-center justify-center rounded-full bg-[#E3EFF1]">
+                      <Icon size={13} color="#1A4A57" />
+                    </View>
+                    <Text
+                      numberOfLines={1}
+                      className="flex-1 text-xs font-extrabold text-[#102A32]"
+                    >
+                      {item.title}
+                    </Text>
+                  </View>
+                  <Text
+                    numberOfLines={2}
+                    className="mt-1 text-[10.5px] leading-3.5 text-[#5E6E76]"
+                  >
+                    {item.desc}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+
+          <View className="mt-2.5 gap-2">
+            {PLANS.map((plan) => {
+              const active = plan.id === selectedId;
+              const isCurrent = isPremium && currentPlan === plan.id;
+              return (
+                <Pressable
+                  key={plan.id}
+                  onPress={() => setSelectedId(plan.id)}
+                  className={`flex-row items-center justify-between rounded-2xl border px-3.5 ${
+                    isSmallScreen ? 'py-2' : 'py-2.5'
+                  } ${
+                    active
+                      ? 'border-2 border-[#1A4A57] bg-[#F2F8F9]'
+                      : 'border-[#E1E7EA] bg-white'
+                  }`}
+                >
+                  <View className="flex-row items-center gap-3">
+                    <View
+                      className={`h-5 w-5 items-center justify-center rounded-full border-2 ${
+                        active ? 'border-[#1A4A57]' : 'border-[#CBD5E1]'
+                      }`}
+                    >
+                      {active ? (
+                        <View className="h-2.5 w-2.5 rounded-full bg-[#1A4A57]" />
+                      ) : null}
+                    </View>
+
+                    <View>
+                      <View className="flex-row items-center gap-1.5">
+                        <Text className="text-sm font-extrabold text-[#102A32]">
+                          {plan.title}
+                        </Text>
+                        {isCurrent ? (
+                          <View className="rounded-md bg-[#1A4A57] px-1.5 py-0.5">
+                            <Text className="text-[9px] font-bold text-white">
+                              MEVCUT PLANIN
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text className="text-xs text-[#5E6E76]">{plan.monthly}</Text>
+                    </View>
+                  </View>
+
+                  <View className="items-end">
+                    <Text className="text-base font-extrabold text-[#102A32]">
+                      {plan.price}
+                    </Text>
+                    {plan.note && plan.note !== 'Standart' ? (
+                      <View className="mt-0.5 rounded-full bg-[#DCFCE7] px-2 py-0.5">
+                        <Text className="text-[10px] font-bold text-[#15803D]">
+                          {plan.note.replace('indirim', 'tasarruf')}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
+
+        <View className="border-t border-[#E8EEF0] bg-white pt-2 pb-1">
+          <ErrorText text={error} />
+
+          <Pressable
+            onPress={buy}
+            disabled={pending}
+            className={`h-11 flex-row items-center justify-center rounded-2xl bg-[#1A4A57] px-4 shadow-sm active:opacity-90 ${
+              pending ? 'opacity-60' : ''
+            }`}
+          >
+            {pending ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <View className="flex-row items-center gap-2">
+                <Check size={16} color="#FFFFFF" strokeWidth={2.5} />
+                <Text className="text-sm font-extrabold text-white">
+                  {isPremium && currentPlan === selectedPlan.id
+                    ? 'Bu Plan Zaten Aktif (Devam Et)'
+                    : `${selectedPlan.title} Planla Başla • ${selectedPlan.price}`}
+                </Text>
+              </View>
+            )}
           </Pressable>
-          <Text className="px-1.5 text-[11px] text-muted dark:text-slate-300">·</Text>
-          <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void restore()}>
-            <Text className="text-[11px] text-muted dark:text-slate-300">Satın alımları geri yükle</Text>
+
+          <Pressable
+            onPress={isPremium ? switchToFree : closePaywall}
+            disabled={pending}
+            className="mt-1 py-1 items-center justify-center"
+          >
+            <Text className="text-xs font-semibold text-[#5E6E76]">
+              {isPremium
+                ? 'Ücretsiz (Standart) Sürüme Geç'
+                : 'Şimdilik ücretsiz sürümle devam et'}
+            </Text>
           </Pressable>
-          <Text className="px-1.5 text-[11px] text-muted dark:text-slate-300">·</Text>
-          <Pressable accessibilityRole="link" hitSlop={8} onPress={() => void Linking.openURL(PRIVACY_URL)}>
-            <Text className="text-[11px] text-muted dark:text-slate-300">Gizlilik politikası</Text>
-          </Pressable>
+
+          <Text className="mt-0.5 px-2 text-center text-[10px] leading-3.5 text-[#7A8B94]">
+            Ödeme Apple/Google hesabınızdan tahsil edilir. Dönem bitiminden en az 24 saat önce
+            iptal edilmediği sürece otomatik yenilenir.
+          </Text>
+
+          <View className="mt-1 flex-row items-center justify-center gap-3">
+            <Pressable onPress={() => Linking.openURL(TERMS_URL)} hitSlop={8}>
+              <Text className="text-[11px] font-bold text-[#1A4A57] underline">
+                Kullanım Koşulları
+              </Text>
+            </Pressable>
+            <Text className="text-[11px] text-[#94A3B8]">•</Text>
+            <Pressable onPress={restore} disabled={pending} hitSlop={8}>
+              <Text className="text-[11px] font-bold text-[#1A4A57] underline">
+                Satın Alımları Geri Yükle
+              </Text>
+            </Pressable>
+            <Text className="text-[11px] text-[#94A3B8]">•</Text>
+            <Pressable onPress={() => Linking.openURL(PRIVACY_URL)} hitSlop={8}>
+              <Text className="text-[11px] font-bold text-[#1A4A57] underline">
+                Gizlilik Politikası
+              </Text>
+            </Pressable>
+          </View>
         </View>
-      </Animated.View>
-    </Screen>
+      </SafeAreaView>
+    </SafeAreaView>
   );
 }

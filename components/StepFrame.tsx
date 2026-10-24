@@ -1,7 +1,14 @@
 import { ReactNode } from 'react';
 import { Text, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Button, Screen } from '@/components/ui';
+import { BackButton, Button, Screen, Title } from '@/components/ui';
+
+const STEP_LABELS: Record<number, string> = {
+  1: 'Kişisel Bilgiler',
+  2: 'Eğitim & Bölüm',
+  3: 'Sınav Puanları',
+  4: 'Ehliyet & Özel Şartlar',
+  5: 'Deneyim & Sertifikalar',
+};
 
 export function StepFrame({
   step,
@@ -18,37 +25,39 @@ export function StepFrame({
   onNext: () => void;
   nextLabel?: string;
 }) {
-  const router = useRouter();
-  const editing = Boolean(useLocalSearchParams<{ edit?: string }>().edit);
-  const forwardLabel = editing && nextLabel === 'Devam et' ? 'Kaydet' : nextLabel;
+  const totalSteps = 5;
+
   return (
-    <Screen
-      footer={
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <Button
-              label="Geri"
-              variant="secondary"
-              onPress={() => (step === 1 && !editing ? router.replace('/(onboarding)/welcome') : router.back())}
-            />
-          </View>
-          <View className="flex-1">
-            <Button label={forwardLabel} onPress={onNext} />
-          </View>
-        </View>
-      }
-    >
-      <View className="mt-2 flex-row items-center justify-between">
-        <Text className="text-xs font-semibold tracking-[2px] text-brand-700 dark:text-brand-100">ADIM {step} / 5</Text>
-        <View className="flex-row gap-1.5">
-          {[1, 2, 3, 4, 5].map((item) => (
-            <View key={item} className={`h-1.5 w-6 rounded-full ${item <= step ? 'bg-brand-700' : 'bg-line'}`} />
-          ))}
+    <Screen footer={<Button label={nextLabel} onPress={onNext} />}>
+      <View className="mb-3 flex-row items-center justify-between">
+        <BackButton fallback="/(onboarding)/welcome" />
+        <View className="items-end">
+          <Text className="text-[11px] font-bold uppercase tracking-wider text-[#1A4A57]">
+            Adım {step} / {totalSteps}
+          </Text>
+          <Text className="text-xs font-medium text-[#5E6E76]">
+            {STEP_LABELS[step] ?? ''}
+          </Text>
         </View>
       </View>
-      <Text className="mt-4 text-3xl font-bold text-ink dark:text-white">{title}</Text>
-      <Text className="mb-5 mt-2 text-sm leading-6 text-muted dark:text-slate-300">{subtitle}</Text>
-      {children}
+
+      <View className="mb-5 flex-row gap-1.5">
+        {Array.from({ length: totalSteps }, (_, idx) => {
+          const current = idx + 1;
+          const completed = current <= step;
+          return (
+            <View
+              key={current}
+              className={`h-1.5 flex-1 rounded-full ${
+                completed ? 'bg-[#1A4A57]' : 'bg-[#E1E7EA]'
+              }`}
+            />
+          );
+        })}
+      </View>
+
+      <Title subtitle={subtitle}>{title}</Title>
+      <View className="flex-1">{children}</View>
     </Screen>
   );
 }
