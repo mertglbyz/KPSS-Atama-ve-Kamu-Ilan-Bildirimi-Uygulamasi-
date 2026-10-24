@@ -21,16 +21,19 @@ export default function OnboardingResult() {
     : 'Eşleşmeler hesaplanıyor.';
 
   return (
-    <Screen>
+    <Screen
+      footer={
+        <View className="gap-3">
+          <Button label="Uygun ilanları keşfet" onPress={() => router.push('/paywall')} />
+          <Button label="İlanlara geç" variant="secondary" onPress={() => router.replace('/(tabs)')} />
+        </View>
+      }
+    >
       <BackButton fallback="/(onboarding)/step5-documents" />
       <Title subtitle="Sıradaki adım, sana uyan ilanları açmak.">Profilin hazır</Title>
       <Card>
         <Text className="text-lg font-semibold leading-7 text-ink dark:text-white">{message}</Text>
       </Card>
-      <View className="mt-4 gap-3">
-        <Button label="Uygun ilanları keşfet" onPress={() => router.push('/paywall')} />
-        <Button label="İlanlara geç" variant="secondary" onPress={() => router.replace('/(tabs)')} />
-      </View>
     </Screen>
   );
 }

@@ -157,6 +157,7 @@ export function Field({
   error,
   hint,
   maxDigits = 4,
+  maxValue,
 }: {
   label: string;
   value: string;
@@ -164,15 +165,16 @@ export function Field({
   placeholder?: string;
   keyboardType?: KeyboardTypeOptions;
   kind?: 'text' | 'integer' | 'score';
-  error?: string;
+  error?: string | null;
   hint?: string;
   maxDigits?: number;
+  maxValue?: number;
 }) {
   const [focused, setFocused] = useState(false);
 
   function handleChange(raw: string) {
     if (kind === 'integer') {
-      onChange(integerText(raw, maxDigits));
+      onChange(integerText(raw, maxDigits, maxValue));
       return;
     }
     if (kind === 'score') {

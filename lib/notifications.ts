@@ -23,3 +23,10 @@ export async function registerPushToken(userId: string): Promise<string | null> 
   }
   return token;
 }
+
+export async function requestNotificationPermission(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
+  const current = await Notifications.getPermissionsAsync();
+  const permission = current.granted ? current : await Notifications.requestPermissionsAsync();
+  return permission.granted;
+}

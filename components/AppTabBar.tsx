@@ -1,10 +1,10 @@
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type { ComponentProps } from 'react';
+import { Tabs } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const insets = useSafeAreaInsets();
+type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
+export function AppTabBar({ state, descriptors, emitter, navigateToTab, insets }: TabBarProps) {
   return (
     <View
       style={{ bottom: Math.max(insets.bottom, 12) }}
@@ -19,14 +19,12 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
         const isFocused = state.index === index;
 
         const onPress = () => {
-          const event = navigation.emit({
+          const event = emitter.emit({
             type: 'tabPress',
             target: route.key,
             canPreventDefault: true,
           });
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
-          }
+          if (!isFocused && !event.defaultPrevented) navigateToTab(route.key);
         };
 
         const color = isFocused ? '#1A4A57' : '#5E6E76';

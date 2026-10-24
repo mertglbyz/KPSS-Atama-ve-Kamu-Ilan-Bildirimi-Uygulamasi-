@@ -38,10 +38,10 @@ export default function StepPersonal() {
 
   return (
     <StepFrame step={1} title="Kişisel bilgiler" subtitle="Yaş, boy ve il; zabıta, güvenlik ve yerel işçi ilanlarında kullanılıyor." onNext={next}>
-      <Field label="Ad" value={draft.nickname} onChangeText={(nickname) => patch({ nickname })} hint="En az 2 karakter." error={draft.nickname || checked ? nameError : null} />
-      <Field label="Yaş" kind="integer" maxDigits={2} maxValue={70} value={draft.age} onChangeText={(ageValue) => patch({ age: ageValue })} hint="17 ile 70 arasında." error={draft.age || checked ? ageError : null} />
-      <Field label="Boy (cm)" kind="integer" maxDigits={3} maxValue={220} value={draft.height} onChangeText={(heightValue) => patch({ height: heightValue })} hint="140 ile 220 cm arasında." error={draft.height || checked ? heightError : null} />
-      <Field label="Kilo (kg, isteğe bağlı)" kind="integer" maxDigits={3} maxValue={220} value={draft.weight} onChangeText={(weightValue) => patch({ weight: weightValue })} hint="Boş bırakılabilir. Girilirse 35 ile 220 kg." error={weightError} />
+      <Field label="Ad" value={draft.nickname} onChange={(nickname) => patch({ nickname })} hint="En az 2 karakter." error={draft.nickname || checked ? nameError : null} />
+      <Field label="Yaş" kind="integer" maxDigits={2} maxValue={70} value={draft.age} onChange={(ageValue) => patch({ age: ageValue })} hint="17 ile 70 arasında." error={draft.age || checked ? ageError : null} />
+      <Field label="Boy (cm)" kind="integer" maxDigits={3} maxValue={220} value={draft.height} onChange={(heightValue) => patch({ height: heightValue })} hint="140 ile 220 cm arasında." error={draft.height || checked ? heightError : null} />
+      <Field label="Kilo (kg, isteğe bağlı)" kind="integer" maxDigits={3} maxValue={220} value={draft.weight} onChange={(weightValue) => patch({ weight: weightValue })} hint="Boş bırakılabilir. Girilirse 35 ile 220 kg." error={weightError} />
       <Text className="mb-2 text-sm font-medium text-ink dark:text-slate-200">Cinsiyet</Text>
       <Choice options={['Erkek', 'Kadın']} value={draft.gender} onChange={(gender) => patch({ gender: gender as 'Erkek' | 'Kadın' })} />
       {checked && genderError ? <ErrorText text={genderError} /> : null}

@@ -75,7 +75,7 @@ export default function PositionDetailScreen() {
         <View className="gap-2">
           <Button
             label={`Resmi İlan Kılavuzunu Aç (${sourceLabel(job.sourceName)})`}
-            onPress={() => openOfficialSource(job.sourceUrl)}
+            onPress={() => void openOfficialSource(job.sourceName, job.sourceUrl, job.announcementTitle, job.institutionName, job.applicationStartDate)}
           />
           <View className="flex-row gap-2">
             <Pressable

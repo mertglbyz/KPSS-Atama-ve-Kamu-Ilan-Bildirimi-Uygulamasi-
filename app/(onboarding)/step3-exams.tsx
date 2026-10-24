@@ -59,7 +59,7 @@ export default function StepExams() {
         <>
           <Text className="mb-2 text-sm font-medium text-ink dark:text-slate-200">Puan türü</Text>
           <Choice options={types} value={draft.kpssType} onChange={(kpssType) => patch({ kpssType })} />
-          <Field label="KPSS puanı" kind="score" value={draft.kpssScore} onChangeText={(kpssScore) => patch({ kpssScore })} placeholder="81,1288" hint="0 ile 100 arasında. Ondalık için virgül kullan." error={(draft.kpssScore || checked) ? kpssError : null} />
+          <Field label="KPSS puanı" kind="score" value={draft.kpssScore} onChange={(kpssScore) => patch({ kpssScore })} placeholder="81,1288" hint="0 ile 100 arasında. Ondalık için virgül kullan." error={(draft.kpssScore || checked) ? kpssError : null} />
           <Text className="mb-2 text-sm font-medium text-ink dark:text-slate-200">Varsa ikinci puanın</Text>
           <Text className="mb-2 text-xs leading-5 text-muted dark:text-slate-300">A grubu adayları Hukuk, İktisat, Maliye gibi alan puanını da ekleyebilir. İlan o puanı istiyorsa o puanla eşleşir.</Text>
           {(draft.kpssScores ?? []).map((item) => (
@@ -68,7 +68,7 @@ export default function StepExams() {
             </Pressable>
           ))}
           <Choice options={types} value={extraType} onChange={setExtraType} />
-          <Field label="Ek KPSS puanı" kind="score" value={extraScore} onChangeText={setExtraScore} placeholder="75,2500" />
+          <Field label="Ek KPSS puanı" kind="score" value={extraScore} onChange={setExtraScore} placeholder="75,2500" />
           <Pressable
             onPress={() => {
               const score = parseScore(extraScore);
@@ -82,8 +82,8 @@ export default function StepExams() {
           </Pressable>
         </>
       ) : null}
-      <Field label="YDS (isteğe bağlı)" kind="score" value={draft.ydsScore} onChangeText={(ydsScore) => patch({ ydsScore })} hint="Boş bırakılabilir. Girilirse 0 ile 100." error={ydsError} />
-      <Field label="ALES (isteğe bağlı)" kind="score" value={draft.alesScore} onChangeText={(alesScore) => patch({ alesScore })} hint="Boş bırakılabilir. Girilirse 0 ile 100." error={alesError} />
+      <Field label="YDS (isteğe bağlı)" kind="score" value={draft.ydsScore} onChange={(ydsScore) => patch({ ydsScore })} hint="Boş bırakılabilir. Girilirse 0 ile 100." error={ydsError} />
+      <Field label="ALES (isteğe bağlı)" kind="score" value={draft.alesScore} onChange={(alesScore) => patch({ alesScore })} hint="Boş bırakılabilir. Girilirse 0 ile 100." error={alesError} />
       <ErrorText text={error} />
     </StepFrame>
   );

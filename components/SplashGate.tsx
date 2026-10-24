@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { ReactNode, useEffect, useState } from 'react';
-import { Image, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
+import { initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { hideNativeSplash } from '@/lib/boot-splash';
 import { useAppStore } from '@/store/useAppStore';
 import { useProfileStore } from '@/store/useProfileStore';
@@ -8,7 +9,9 @@ import { useProfileStore } from '@/store/useProfileStore';
 const SPLASH = require('../assets/images/splash.png');
 
 export function SplashGate({ children }: { children: ReactNode }) {
-  const { width, height } = useWindowDimensions();
+  const liveInsets = useSafeAreaInsets();
+  const top = liveInsets.top || initialWindowMetrics?.insets.top || 0;
+  const bottom = liveInsets.bottom || initialWindowMetrics?.insets.bottom || 0;
   const hydrated = useProfileStore((state) => state.hydrated);
   const ready = useAppStore((state) => state.ready);
   const [minElapsed, setMinElapsed] = useState(false);
@@ -39,7 +42,9 @@ export function SplashGate({ children }: { children: ReactNode }) {
     return (
       <View accessibilityLabel="Açılış ekranı" style={styles.screen}>
         <StatusBar style="light" />
-        <Image source={SPLASH} resizeMode="contain" style={{ width, height }} onLoad={hideNativeSplash} />
+        <View style={{ flex: 1, width: '100%', paddingTop: top, paddingBottom: bottom }}>
+          <Image source={SPLASH} resizeMode="contain" style={styles.art} onLoad={hideNativeSplash} />
+        </View>
       </View>
     );
   }
@@ -50,8 +55,10 @@ export function SplashGate({ children }: { children: ReactNode }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#032F3A',
+  },
+  art: {
+    width: '100%',
+    height: '100%',
   },
 });

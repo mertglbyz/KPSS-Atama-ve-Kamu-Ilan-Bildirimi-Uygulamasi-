@@ -46,7 +46,7 @@ export default function StepDocuments() {
   return (
     <StepFrame step={5} title="Belgeler ve SGK" subtitle="Sertifika ve prim günü, şartlı kadroları doğru elemek için kullanılır." onNext={next} nextLabel={pending ? 'Kaydediliyor' : 'Profili tamamla'}>
       {draft.hasSgkHistory ? (
-        <Field label="SGK prim günü" kind="integer" maxDigits={5} maxValue={20000} value={draft.sgkPrimDays} onChangeText={(sgkPrimDays) => patch({ sgkPrimDays })} hint="0 ile 20000 arasında." error={daysError} />
+        <Field label="SGK prim günü" kind="integer" maxDigits={5} maxValue={20000} value={draft.sgkPrimDays} onChange={(sgkPrimDays) => patch({ sgkPrimDays })} hint="0 ile 20000 arasında." error={daysError} />
       ) : (
         <Text className="mb-4 text-sm leading-5 text-muted dark:text-slate-300">Sigortalı çalışma geçmişin kapalı. Prim günü bu yüzden sorulmuyor.</Text>
       )}
