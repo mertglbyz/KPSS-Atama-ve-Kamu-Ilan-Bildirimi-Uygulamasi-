@@ -13,6 +13,7 @@ import { JobChips, JobNotice, JobRequirements } from '@/components/JobFacts';
 import { BackButton, Button, Card, Screen } from '@/components/ui';
 import { fetchPosition, upsertInteraction } from '@/lib/data';
 import { evaluatePosition } from '@/lib/match';
+import { showSaveBlocked } from '@/lib/save-guard';
 import { toMatchProfile } from '@/lib/profile';
 import { openOfficialSource, sourceLabel } from '@/lib/source';
 import { useAppStore } from '@/store/useAppStore';
@@ -54,6 +55,17 @@ export default function PositionDetailScreen() {
     }
   }
 
+  function toggleSave() {
+    if (!interaction?.isSaved && verdict && !verdict.matched) {
+      const gaps = verdict.gaps.slice(0, 4).join(', ');
+      showSaveBlocked(
+        `Bu ilan profiline uygun olmadığı için kaydedilemez.${gaps ? `\n\nUyuşmayan şartlar: ${gaps}.` : ''}\n\nYalnızca profiline uygun ilanları kaydedebilirsin.`,
+      );
+      return;
+    }
+    void updateInteraction({ is_saved: !interaction?.isSaved });
+  }
+
   if (!job) {
     return (
       <Screen>
@@ -79,9 +91,7 @@ export default function PositionDetailScreen() {
           />
           <View className="flex-row gap-2">
             <Pressable
-              onPress={() =>
-                updateInteraction({ is_saved: !interaction?.isSaved })
-              }
+              onPress={toggleSave}
               className={`h-10 flex-1 flex-row items-center justify-center gap-1.5 rounded-xl border ${
                 interaction?.isSaved
                   ? 'border-[#1A4A57] bg-[#E7F1F2]'

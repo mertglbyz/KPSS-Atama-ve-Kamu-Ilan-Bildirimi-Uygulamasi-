@@ -34,7 +34,7 @@ export default function StepDocuments() {
     patch({ onboardingCompleted: true, sgkPrimDays: nextDraft.sgkPrimDays });
     try {
       if (mode === 'live' && userId) await saveProfile(userId, nextDraft);
-      router.replace(returnToProfile ? '/(tabs)/profile' : '/(onboarding)/result');
+      router.replace(returnToProfile ? '/(tabs)/profile' : '/(onboarding)/notifications-permission');
     } catch (caught) {
       patch({ onboardingCompleted: draft.onboardingCompleted });
       setError(caught instanceof Error ? caught.message : 'Profil kaydedilemedi');

@@ -7,13 +7,14 @@ import { CardActions, JobChips, JobNotice } from '@/components/JobFacts';
 import { openOfficialSource, sourceLabel } from '@/lib/source';
 import { Button, Card, Choice, Screen, Title } from '@/components/ui';
 import { fetchCards, fetchMatches, upsertInteraction } from '@/lib/data';
+import { checkSaveEligibility, showSaveBlocked } from '@/lib/save-guard';
 import { useAppStore } from '@/store/useAppStore';
 import { useProfileStore } from '@/store/useProfileStore';
 
 const SCOPES = [
   ['all', 'Tümü'],
   ['matches', 'Bana uygun'],
-  ['saved', 'Favoriler'],
+  ['saved', 'Kaydedilenler'],
   ['archive', 'Geçmiş'],
   ['hidden', 'Gizlenen'],
 ] as const;
@@ -112,7 +113,13 @@ export default function JobsScreen() {
           </View>
         </Card>
       ) : rows.length === 0 ? (
-        <Text className="mt-6 text-muted dark:text-slate-300">{cards.isLoading || archive.isLoading ? 'İlanlar yükleniyor.' : 'Bu görünümde ilan yok.'}</Text>
+        <Text className="mt-6 text-muted dark:text-slate-300">
+          {cards.isLoading || archive.isLoading
+            ? 'İlanlar yükleniyor.'
+            : scope === 'saved'
+              ? 'Henüz ilan kaydetmedin. Profiline uygun ilanlarda Kaydet\'e dokunarak buraya ekleyebilirsin.'
+              : 'Bu görünümde ilan yok.'}
+        </Text>
       ) : (
         rows.map((row) => {
           const interaction = interactions[row.id];
@@ -123,6 +130,16 @@ export default function JobsScreen() {
               applicationStatus: interaction?.applicationStatus ?? 'none',
             });
             if (userId) void upsertInteraction(userId, row.id, partial);
+          }
+          async function toggleSave() {
+            if (!interaction?.isSaved) {
+              const check = await checkSaveEligibility(userId, row.id, draft, premium);
+              if (!check.ok) {
+                showSaveBlocked(check.message);
+                return;
+              }
+            }
+            remember({ is_saved: !interaction?.isSaved });
           }
           return (
             <View key={row.id} className="mb-3 rounded-3xl border border-line bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
@@ -140,7 +157,7 @@ export default function JobsScreen() {
               <CardActions
                 saved={Boolean(interaction?.isSaved)}
                 hidden={Boolean(interaction?.isHidden)}
-                onSave={() => remember({ is_saved: !interaction?.isSaved })}
+                onSave={() => void toggleSave()}
                 onHide={() => remember({ is_hidden: !interaction?.isHidden })}
                 onOpen={() => router.push(`/position/${row.id}`)}
               />

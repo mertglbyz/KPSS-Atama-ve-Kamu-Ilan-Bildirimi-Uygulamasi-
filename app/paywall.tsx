@@ -5,6 +5,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -41,6 +42,11 @@ const BENEFITS = [
     desc: 'Taban puan, sıralama ve kontenjan ayrıntısı açılır.',
   },
 ] as const;
+
+const LEGAL_TEXT =
+  Platform.OS === 'ios'
+    ? 'Ödeme, satın alma onayında Apple Hesabınızdan tahsil edilir. Abonelik, mevcut dönemin bitiminden en az 24 saat önce otomatik yenilemeyi kapatmadığınız sürece kendiliğinden yenilenir. Yönetmek veya iptal etmek için Ayarlar > Apple Hesabı > Abonelikler yolunu kullanın.'
+    : 'Ödeme, satın alma onayında Google Play hesabınızdan tahsil edilir. Abonelik, mevcut dönemin bitiminden en az 24 saat önce iptal etmediğiniz sürece kendiliğinden yenilenir. Yönetmek veya iptal etmek için Play Store > Profil > Ödemeler ve abonelikler > Abonelikler yolunu kullanın.';
 
 export default function PaywallScreen() {
   const router = useRouter();
@@ -122,12 +128,6 @@ export default function PaywallScreen() {
     }
   }
 
-  function switchToFree() {
-    setDemoPremium(false);
-    setPremium(false, 'free');
-    closePaywall();
-  }
-
   return (
     <SafeAreaView className="flex-1 bg-[#133B47]" edges={['top']}>
       <View className="px-5 pb-3 pt-1.5">
@@ -169,39 +169,46 @@ export default function PaywallScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           bounces={false}
-          contentContainerStyle={{ paddingBottom: 6 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
         >
-          <View className="flex-row flex-wrap justify-between gap-y-2">
+          <View
+            className="px-1"
+            style={{ flex: 1, justifyContent: 'space-evenly', minHeight: isSmallScreen ? 0 : 230 }}
+          >
             {BENEFITS.map((item) => {
               const Icon = item.icon;
               return (
                 <View
                   key={item.title}
-                  className="w-[48.8%] rounded-2xl border border-[#E6ECEF] bg-[#F8FAFB] p-2.5"
+                  className="flex-row items-center gap-3.5"
+                  style={{ paddingVertical: isSmallScreen ? 5 : 4 }}
                 >
-                  <View className="flex-row items-center gap-2">
-                    <View className="h-6 w-6 items-center justify-center rounded-full bg-[#E3EFF1]">
-                      <Icon size={13} color="#1A4A57" />
-                    </View>
+                  <View
+                    className="items-center justify-center rounded-2xl bg-[#E3EFF1]"
+                    style={{ width: isSmallScreen ? 38 : 46, height: isSmallScreen ? 38 : 46 }}
+                  >
+                    <Icon size={isSmallScreen ? 18 : 22} color="#1A4A57" />
+                  </View>
+                  <View className="flex-1">
                     <Text
-                      numberOfLines={1}
-                      className="flex-1 text-xs font-extrabold text-[#102A32]"
+                      className="font-extrabold text-[#102A32]"
+                      style={{ fontSize: isSmallScreen ? 14 : 16 }}
                     >
                       {item.title}
                     </Text>
+                    <Text
+                      className="mt-0.5 text-[#5E6E76]"
+                      style={{ fontSize: isSmallScreen ? 12 : 13, lineHeight: isSmallScreen ? 16 : 18 }}
+                    >
+                      {item.desc}
+                    </Text>
                   </View>
-                  <Text
-                    numberOfLines={2}
-                    className="mt-1 text-[10.5px] leading-3.5 text-[#5E6E76]"
-                  >
-                    {item.desc}
-                  </Text>
                 </View>
               );
             })}
           </View>
 
-          <View className="mt-2.5 gap-2">
+          <View className="mt-3 gap-2.5">
             {PLANS.map((plan) => {
               const active = plan.id === selectedId;
               const isCurrent = isPremium && currentPlan === plan.id;
@@ -210,7 +217,7 @@ export default function PaywallScreen() {
                   key={plan.id}
                   onPress={() => setSelectedId(plan.id)}
                   className={`flex-row items-center justify-between rounded-2xl border px-3.5 ${
-                    isSmallScreen ? 'py-2' : 'py-2.5'
+                    isSmallScreen ? 'py-2.5' : 'py-3.5'
                   } ${
                     active
                       ? 'border-2 border-[#1A4A57] bg-[#F2F8F9]'
@@ -230,7 +237,7 @@ export default function PaywallScreen() {
 
                     <View>
                       <View className="flex-row items-center gap-1.5">
-                        <Text className="text-sm font-extrabold text-[#102A32]">
+                        <Text className="text-base font-extrabold text-[#102A32]">
                           {plan.title}
                         </Text>
                         {isCurrent ? (
@@ -241,12 +248,12 @@ export default function PaywallScreen() {
                           </View>
                         ) : null}
                       </View>
-                      <Text className="text-xs text-[#5E6E76]">{plan.monthly}</Text>
+                      <Text className="text-[13px] text-[#5E6E76]">{plan.monthly}</Text>
                     </View>
                   </View>
 
                   <View className="items-end">
-                    <Text className="text-base font-extrabold text-[#102A32]">
+                    <Text className="text-lg font-extrabold text-[#102A32]">
                       {plan.price}
                     </Text>
                     {plan.note && plan.note !== 'Standart' ? (
@@ -263,13 +270,13 @@ export default function PaywallScreen() {
           </View>
         </ScrollView>
 
-        <View className="border-t border-[#E8EEF0] bg-white pt-2 pb-1">
+        <View className="border-t border-[#E8EEF0] bg-white pt-3 pb-1">
           <ErrorText text={error} />
 
           <Pressable
             onPress={buy}
             disabled={pending}
-            className={`h-11 flex-row items-center justify-center rounded-2xl bg-[#1A4A57] px-4 shadow-sm active:opacity-90 ${
+            className={`h-[52px] flex-row items-center justify-center rounded-2xl bg-[#1A4A57] px-4 shadow-sm active:opacity-90 ${
               pending ? 'opacity-60' : ''
             }`}
           >
@@ -278,7 +285,7 @@ export default function PaywallScreen() {
             ) : (
               <View className="flex-row items-center gap-2">
                 <Check size={16} color="#FFFFFF" strokeWidth={2.5} />
-                <Text className="text-sm font-extrabold text-white">
+                <Text className="text-[15px] font-extrabold text-white">
                   {isPremium && currentPlan === selectedPlan.id
                     ? 'Bu Plan Zaten Aktif (Devam Et)'
                     : `${selectedPlan.title} Planla Başla • ${selectedPlan.price}`}
@@ -287,21 +294,8 @@ export default function PaywallScreen() {
             )}
           </Pressable>
 
-          <Pressable
-            onPress={isPremium ? switchToFree : closePaywall}
-            disabled={pending}
-            className="mt-1 py-1 items-center justify-center"
-          >
-            <Text className="text-xs font-semibold text-[#5E6E76]">
-              {isPremium
-                ? 'Ücretsiz (Standart) Sürüme Geç'
-                : 'Şimdilik ücretsiz sürümle devam et'}
-            </Text>
-          </Pressable>
-
-          <Text className="mt-0.5 px-2 text-center text-[10px] leading-3.5 text-[#7A8B94]">
-            Ödeme Apple/Google hesabınızdan tahsil edilir. Dönem bitiminden en az 24 saat önce
-            iptal edilmediği sürece otomatik yenilenir.
+          <Text className="mt-2 px-2 text-center text-[11px] leading-[15px] text-[#7A8B94]">
+            {LEGAL_TEXT}
           </Text>
 
           <View className="mt-1 flex-row items-center justify-center gap-3">
